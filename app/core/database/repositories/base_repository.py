@@ -15,40 +15,46 @@ class BaseRepository(Generic[ModelType]):
 
     def get_by_id(self, id: int) -> Optional[ModelType]:
         try:
-            return self.session.query(self.model_class).filter(self.model_class.id == id).first()
+            return (
+                self.session
+                .query(self.model_class)
+                .filter(self.model_class.id == id)
+                .first()
+            )
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar trabajar con {self.model_class.__name__} por el id {id}: {e}")
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
         try:
-            return self.session.query(self.model_class).offset(skip).limit(limit).all()
+            return (
+                self.session
+                .query(self.model_class)
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar trabajar con {self.model_class.__name__}: {e}")
             return []
         
-    def create(self, obj_data: Dict[str, Any]) -> Optional[ModelType]:
-        db_obj = self.model_class(**obj_data)
+    def create(self, obj: ModelType) -> ModelType:
         try:
-            self.session.add(db_obj)
+            self.session.add(obj)
             self.session.flush()
-            return db_obj
+            return obj
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar crear {self.model_class.__name__}: {e}")
             self.session.rollback()
-            return None
+            raise
         
-    def update(self, db_obj: ModelType, update_data: Dict[str, Any]) -> Optional[ModelType]:
+    def update(self, obj: ModelType) -> ModelType:
         try:
-            for field, value in update_data.items():
-                if hasattr(db_obj, field):
-                    setattr(db_obj, field, value)
-
             self.session.flush()
-            return db_obj
+            return obj
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar actualizar {self.model_class.__name__}: {e}")
             self.session.rollback()
-            return None
+            raise
         
     def delete(self, db_obj: ModelType) -> bool:
         try:
@@ -58,7 +64,7 @@ class BaseRepository(Generic[ModelType]):
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar eliminar {self.model_class.__name__}: {e}")
             self.session.rollback()
-            return False
+            raise
         
     def delete_by_id(self, id: int) -> bool:
         try:
