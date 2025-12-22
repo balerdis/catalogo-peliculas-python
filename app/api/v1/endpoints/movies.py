@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/basic/hello")
+@router.get("/hello")
 def read_hello():
     """Endpoint principal de la API."""
     return {"message": "Bienvenido al Catálogo de Películas 🎬"}

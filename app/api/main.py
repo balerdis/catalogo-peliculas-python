@@ -5,14 +5,14 @@ from fastapi.openapi.utils import get_openapi
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 
-from app.api.v1.basic_endpoints import router as api_router_basic
+from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import APIRouter, HTTPException, status
 
-from .v1.models import ApiResponse
+from .v1.schemas.generic import ApiResponse
 
 import logging
 
@@ -94,7 +94,7 @@ def create_app() -> FastAPI:
     logger.info("Auth Middleware configurated")
 
     v1_router = APIRouter()
-    v1_router.include_router(api_router_basic, tags=["Basic"])
+    v1_router.include_router(api_router_movies, tags=["MOVIES"], prefix="/movies")
     app.include_router(v1_router, prefix="/api/v1")
 
     @app.get("/", response_model=ApiResponse)
