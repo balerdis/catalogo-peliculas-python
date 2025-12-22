@@ -4,9 +4,10 @@ from sqlalchemy.orm import sessionmaker
 from app.config.config import config
 from contextlib import contextmanager
 import logging
+from .models import Base
 
 logger = logging.getLogger(__name__)
-Base = declarative_base()
+
 
 class DatabaseConnection:
     def __init__(self):
