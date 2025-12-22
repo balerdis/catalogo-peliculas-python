@@ -7,22 +7,20 @@ class MovieBase(BaseModel):
     director: str = Field(..., min_length=1, max_length=100, description='Director de la pelicula')
     year: int = Field(..., gt=1880, lt=2030, description='Año de la pelicula')
     genre: str = Field(..., min_length=3, max_length=50, description='Genero principal de la pelicula')
+    price: float = Field(..., gt=0.0, description='Precio de la pelicula')
 
     duration: Optional[int] = Field(
         None, ge=1, le=600, description='Duracion de la pelicula en minutos'
     )
 
-    rating: Optional[float] = Field(
-        None, ge=0.0, le=10.0, description='Calificacion de la pelicula'
+    rating: Optional[int] = Field(
+        None, ge=0, le=10, description='Calificacion de la pelicula'
     )
 
     description: Optional[str] = Field(
         None, max_length=1000, description='Descripcion de la pelicula'
     )
 
-    price: Optional[float] = Field(
-        None, ge=0.0, description='Precio de la pelicula'
-    )
 
     is_watched: Optional[bool] = Field(
         default=False, description='Indica si la pelicula ha sido vista'
@@ -47,3 +45,9 @@ class MovieBase(BaseModel):
 
 class MovieCreate(MovieBase):
     pass
+
+class MovieResponse(MovieBase):
+    id: int
+
+    class Config:
+        from_attributes = True
