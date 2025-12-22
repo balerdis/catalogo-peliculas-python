@@ -34,17 +34,27 @@ class Movie(Base):
     def validate_year(self, _, value):
         if value < 1880 or value > 2030:
             raise ValueError("Year must be between 1880 and 2030")
+        return value
     @validates('duration')
     def validate_duration(self, _, value):
+        if value is None:
+            return value
         if value < 1 or value > 600:
             raise ValueError("Duration must be between 1 and 600")
+        return value
     @validates('rating')
     def validate_rating(self, _, value):
+        if value is None:
+            return value        
         if value < 0 or value > 10:
             raise ValueError("Rating must be between 0 and 10")
+        return value
     @validates('price')
     def validate_price(self, _, value):
-        if value <= 0.0:
+        if value is None:
+            return value        
+        if value <= 0:
             raise ValueError("Price must be greater than 0")
+        return value
         
 
