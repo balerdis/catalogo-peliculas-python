@@ -1,0 +1,23 @@
+# Ignorar cache de Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configuración de entorno
+.env
+*.env
+requirements.in
+requirements.txt
+
+# Virtual environments
+venv/
+.venv/
+.env/
+
+# Archivos de VSCode 
+.vscode/
+
+
+
