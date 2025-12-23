@@ -1,5 +1,7 @@
 from typing import Annotated, Optional, TypedDict
 from pydantic import BaseModel, Field, constr, field_validator
+from typing import Generic, TypeVar, List
+T = TypeVar("T")
 
 class QueryRequest(BaseModel):
     question: str
@@ -30,4 +32,23 @@ class DataModel(BaseModel):
 
     model_config = {
         "extra": "allow"  
-    }        
+    }  
+
+"""
+La idea es tener una response estandar para todos los endpoints de la api
+{
+  "status": "success",
+  "message": "La consulta fue realizada exitosamente",
+  "errors": [],
+  "data": {
+    "id": 3,
+    "title": "string",
+    "year": 1881
+  }
+}        
+"""
+class ApiResponse(BaseModel, Generic[T]):
+    status: str
+    message: str
+    errors: List[str]
+    data: T
