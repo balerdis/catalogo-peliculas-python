@@ -1,5 +1,11 @@
 from fastapi import APIRouter
-from app.api.v1.schemas.movies import MovieCreate
+from app.api.v1.schemas.movies import MovieCreate, MovieResponse
+from app.core.database.connection import db_connection
+from app.core.database.repositories.movie_repository import MovieRepository
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+
 from app.config.config import config
 import logging
 
@@ -15,10 +21,10 @@ def read_hello():
     """Endpoint principal de la API."""
     return {"message": "Bienvenido al Catálogo de Películas 🎬"}
 
-@router.post('/movie')
-async def create_movie(request: MovieCreate):
-    return {
-        "success": True,
-        "message": "Película creada exitosamente",
-        "data": request.model_dump()
-    }
+@router.post("/", response_model=MovieResponse)
+def create_movie(
+    request: MovieCreate,
+    db: Session = Depends(db_connection.get_db),
+):
+    repo = MovieRepository(db)
+    return repo.create(request)
