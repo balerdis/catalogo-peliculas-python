@@ -1,8 +1,8 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from app.config.config import config
-from contextlib import contextmanager
+from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
 import logging
 from .models import Base
 
@@ -46,20 +46,16 @@ class DatabaseConnection:
         db_port = config.DB_PORT
         db_name = config.DB_NAME
         return f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4"
-    
-    @contextmanager
-    def get_session(self):
+
+    def get_db(self) -> Generator[Session, None, None]:
         if not self.SessionLocal:
-            raise RuntimeError("Base de datos aun no inicializada.")
-        session = self.SessionLocal()
+            raise RuntimeError("Base de datos aún no inicializada")
+
+        db = self.SessionLocal()
         try:
-            yield session
-        except Exception as e:
-            logger.error(f"Error en la sesión de base de datos: {e}")
-            session.rollback()
-            raise
+            yield db
         finally:
-            session.close()
+            db.close()
 
     def create_tables(self):
         try:
