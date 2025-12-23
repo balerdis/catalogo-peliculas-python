@@ -46,6 +46,9 @@ class MovieBase(BaseModel):
 class MovieCreate(MovieBase):
     pass
 
+class DeleteMovieResponse(BaseModel):
+    id: int
+
 class MovieUpdate(BaseModel):
     title: str | None = None
     director: str | None = None
