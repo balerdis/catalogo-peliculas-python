@@ -1,18 +1,18 @@
-from time import time
-from fastapi import APIRouter, FastAPI, status
+from fastapi import APIRouter, FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy import text
+from time import time
 
 from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import APIRouter, HTTPException, status
+from app.core.database.repositories.base_repository import EntityNotFoundError
 
-from .v1.schemas.generic import ApiResponse
+from app.api.v1.schemas.generic import ApiResponse
 
 import logging
 
@@ -50,6 +50,13 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc"
     )
+
+    @app.exception_handler(EntityNotFoundError)
+    def entity_not_found_handler(request: Request, exc: EntityNotFoundError):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)}
+        )    
 
     def custom_openapi():
         if app.openapi_schema:
