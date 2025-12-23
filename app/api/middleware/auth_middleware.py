@@ -9,8 +9,6 @@ import json, logging
 from app.api.auth.token_handler import TokenHandler
 from app.config.config import config
 
-logging.basicConfig(level=config.LOG_LEVEL)
-
 
 logger = logging.getLogger(__name__)
 

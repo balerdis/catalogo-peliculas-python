@@ -7,10 +7,6 @@ from app.core.database.connection import db_connection
 from app.config.config import config
 from app.api.v1.schemas.generic import TokenInfo
 
-logging.basicConfig(level=config.LOG_LEVEL)
-
-
-logging.basicConfig(level=config.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 
