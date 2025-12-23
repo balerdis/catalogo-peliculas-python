@@ -1,6 +1,6 @@
 import logging
-from typing import Generic, Optional, TypeVar, Type, Generic
-from pydantic import BaseModel
+from typing import Generic, Optional, TypeVar, Type, Mapping, Any
+
 
 
 from sqlalchemy.orm import Session
@@ -16,71 +16,71 @@ class BaseRepository(Generic[ModelType]):
         self.session = session
 
     def get_by_id(self, id: int) -> Optional[ModelType]:
-        try:
-            return (
-                self.session
-                .query(self.model_class)
-                .filter(self.model_class.id == id)
-                .first()
-            )
-        except SQLAlchemyError as e:
-            logger.error(f"Error al intentar trabajar con {self.model_class.__name__} por el id {id}: {e}")
-            return None
+        return (
+            self.session
+            .query(self.model_class)
+            .filter(self.model_class.id == id)
+            .first()
+        )
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
-        try:
-            return (
-                self.session
-                .query(self.model_class)
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
-        except SQLAlchemyError as e:
-            logger.error(f"Error al intentar trabajar con {self.model_class.__name__}: {e}")
-            return []
+        return (
+            self.session
+            .query(self.model_class)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
         
-    def create(self, data: BaseModel) -> ModelType:
+    def create(self, data: Mapping[str, Any]) -> ModelType:
         try:
-            obj = self.model_class(**data.model_dump())
+            obj = self.model_class(**data)
             self.session.add(obj)
             self.session.commit()
             self.session.refresh(obj)
             return obj
         except SQLAlchemyError as e:
-            logger.error(f"Error al intentar crear {self.model_class.__name__}: {e}")
+            logger.exception(
+                "Error creando %s con data=%s",
+                self.model_class.__name__,
+                data,
+            )
             self.session.rollback()
             raise
         
     def update(self, obj: ModelType) -> ModelType:
         try:
+            self.session.add(obj)
             self.session.commit()
             self.session.refresh(obj)
             return obj
         except SQLAlchemyError as e:
-            logger.error(f"Error al intentar actualizar {self.model_class.__name__}: {e}")
+            logger.exception(
+                "Error al intentar actualizar el %s",
+                self.model_class.__name__,
+            )
             self.session.rollback()
             raise
         
-    def delete(self, db_obj: ModelType) -> bool:
+    def delete(self, db_obj: ModelType) -> None:
         try:
             self.session.delete(db_obj)
-            self.session.commit()         
-            return True
-        except SQLAlchemyError as e:
-            logger.error(f"Error al intentar eliminar {self.model_class.__name__}: {e}")
+            self.session.commit()
+        except SQLAlchemyError:
             self.session.rollback()
+            logger.exception(
+                "Error eliminando %s",
+                self.model_class.__name__,
+            )
             raise
         
     def delete_by_id(self, id: int) -> bool:
-        try:
-            db_obj = self.get_by_id(id)
-            if db_obj:
-                return self.delete(db_obj)
-            return False
-        except SQLAlchemyError as e:
-            logger.error(f"Error al intentar eliminar {self.model_class.__name__} por el id {id}: {e}")
-            return False
+        db_obj = self.get_by_id(id)
+        if not db_obj:
+            raise ValueError("Objeto no encontrado")
+        self.delete(db_obj)
+        return True
         
     def exists(self, **filters) -> bool:
         try:
@@ -89,10 +89,13 @@ class BaseRepository(Generic[ModelType]):
                 if hasattr(self.model_class, field):
                     query = query.filter(getattr(self.model_class, field) == value)
 
-            return query.first() is not None
+            return self.session.query(query.exists()).scalar()
         except SQLAlchemyError as e:
-            logger.error(f"Error al intentar verificar la existencia de {self.model_class.__name__}: {e}")
-            return False
+            logger.exception(
+                "Error al intentar determinar la existencia de %s",
+                self.model_class.__name__,
+            )
+            raise
         
     def count(self, **filters) -> int:
         try:
@@ -103,5 +106,8 @@ class BaseRepository(Generic[ModelType]):
 
             return query.count()
         except SQLAlchemyError as e:
-            logger.error(f"Error al intentar contar {self.model_class.__name__}: {e}")
-            return 0
+            logger.exception(
+                "Error al intentar contar %s",
+                self.model_class.__name__,
+            )
+            raise
