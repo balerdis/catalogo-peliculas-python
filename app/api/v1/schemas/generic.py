@@ -52,3 +52,9 @@ class ApiResponse(BaseModel, Generic[T]):
     message: str
     errors: List[str]
     data: T
+
+class ErrorResponse(BaseModel):
+    success: bool = Field(False, description="Siempre False en errores")
+    message: str = Field(..., description="Mensaje breve para el cliente")
+    error_code: Optional[str] = Field(None, description="Código interno opcional")
+    details: Optional[dict] = Field(None, description="Metadatos del error (opcional)") 
