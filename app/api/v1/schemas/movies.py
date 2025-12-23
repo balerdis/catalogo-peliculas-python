@@ -46,8 +46,10 @@ class MovieBase(BaseModel):
 class MovieCreate(MovieBase):
     pass
 
-class MovieResponse(MovieBase):
+class MovieResponse(BaseModel):
     id: int
+    title: str
+    year: int
 
     class Config:
         from_attributes = True
