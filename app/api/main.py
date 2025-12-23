@@ -11,8 +11,8 @@ from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
 from app.core.database.repositories.base_repository import EntityNotFoundError
+from app.api.v1.schemas.generic import ErrorResponse, ApiResponse
 
-from app.api.v1.schemas.generic import ApiResponse
 
 import logging
 
@@ -53,11 +53,44 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(EntityNotFoundError)
     def entity_not_found_handler(request: Request, exc: EntityNotFoundError):
-        return JSONResponse(
-            status_code=404,
-            content={"detail": str(exc)}
-        )    
+        msg = f"Entidad no encontrada: {str(exc)}"
+        payload = ErrorResponse(
+            success=False,
+            message=msg,
+            error_code="ENTITY_NOT_FOUND",
+            details=None
+        ).model_dump()
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content=payload)
+                            
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        """
+        Formatea cualquier HTTPException (p.ej., 404 del GET-by-id) a nuestro JSON estándar.
+        """
+        # detail puede ser str o dict; nos aseguramos de devolver string legible
+        msg = exc.detail if isinstance(exc.detail, str) else "Error en la solicitud"
+        payload = ErrorResponse(
+            success=False,
+            message=msg,
+            error_code=f"HTTP_{exc.status_code}",
+            details=None
+        ).model_dump()
+        return JSONResponse(status_code=exc.status_code, content=payload)    
 
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        """
+        Fallback para cualquier error no controlado (500).
+        """
+        logging.exception("Unhandled server error", exc_info=exc)
+        payload = ErrorResponse(
+            success=False,
+            message="Error interno del servidor",
+            error_code="INTERNAL_SERVER_ERROR",
+            details=None
+        ).model_dump()
+        return JSONResponse(status_code=500, content=payload)
+    
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
