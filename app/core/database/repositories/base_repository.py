@@ -1,5 +1,7 @@
 import logging
-from typing import Generic, Optional, TypeVar, Dict, Any, Generic
+from typing import Generic, Optional, TypeVar, Type, Generic
+from pydantic import BaseModel
+
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,7 +11,7 @@ logger = logging.getLogger(__name__)
 ModelType = TypeVar("ModelType")
 
 class BaseRepository(Generic[ModelType]):
-    def __init__(self, model_class: type, session: Session):
+    def __init__(self, model_class: Type[ModelType], session: Session):
         self.model_class = model_class
         self.session = session
 
@@ -23,6 +25,7 @@ class BaseRepository(Generic[ModelType]):
             )
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar trabajar con {self.model_class.__name__} por el id {id}: {e}")
+            return None
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
         try:
@@ -37,10 +40,12 @@ class BaseRepository(Generic[ModelType]):
             logger.error(f"Error al intentar trabajar con {self.model_class.__name__}: {e}")
             return []
         
-    def create(self, obj: ModelType) -> ModelType:
+    def create(self, data: BaseModel) -> ModelType:
         try:
+            obj = self.model_class(**data.model_dump())
             self.session.add(obj)
-            self.session.flush()
+            self.session.commit()
+            self.session.refresh(obj)
             return obj
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar crear {self.model_class.__name__}: {e}")
@@ -49,7 +54,8 @@ class BaseRepository(Generic[ModelType]):
         
     def update(self, obj: ModelType) -> ModelType:
         try:
-            self.session.flush()
+            self.session.commit()
+            self.session.refresh(obj)
             return obj
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar actualizar {self.model_class.__name__}: {e}")
@@ -59,7 +65,7 @@ class BaseRepository(Generic[ModelType]):
     def delete(self, db_obj: ModelType) -> bool:
         try:
             self.session.delete(db_obj)
-            self.session.flush()
+            self.session.commit()         
             return True
         except SQLAlchemyError as e:
             logger.error(f"Error al intentar eliminar {self.model_class.__name__}: {e}")
