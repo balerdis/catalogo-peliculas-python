@@ -1,6 +1,6 @@
 from urllib import response
 from fastapi import APIRouter
-from app.api.v1.schemas.movies import MovieCreate, MovieResponse
+from app.api.v1.schemas.movies import MovieCreate, MovieResponse, MovieUpdate
 from app.api.v1.schemas.generic import ApiResponse
 from fastapi import HTTPException
 from app.core.database.connection import db_connection
@@ -30,7 +30,7 @@ def create_movie(
     db: Session = Depends(db_connection.get_db),
 ):
     repo = MovieRepository(db)
-    return repo.create(request)
+    return repo.create(request.model_dump())
 
 @router.get("/movies") 
 def get_movies(
@@ -58,4 +58,31 @@ def get_movie_by_id(
         message="La consulta fue realizada exitosamente",
         errors=[],
         data=MovieResponse.model_validate(movie)
+    )
+
+@router.patch("/movies/{movie_id}", response_model=ApiResponse[MovieResponse])
+def update_movie_by_id(
+    movie_id: int,
+    request: MovieUpdate,
+    db: Session = Depends(db_connection.get_db),
+):
+    repo = MovieRepository(db)
+
+    movie = repo.get_by_id(id=movie_id)
+    if not movie:
+        raise HTTPException(
+            status_code=404,
+            detail="La película no existe"
+        )
+
+    update_data = request.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(movie, field, value)
+
+    return ApiResponse(
+        status="success",
+        message="La consulta fue realizada exitosamente",
+        errors=[],
+        data=MovieResponse.model_validate(repo.update(movie))
     )
