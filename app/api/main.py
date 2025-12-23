@@ -140,8 +140,9 @@ def create_app() -> FastAPI:
     @app.get("/", response_model=ApiResponse)
     async def root():
         return ApiResponse(
-            success=True,
+            status="success",
             message=f"{config.APP_NAME} v{config.APP_VERSION} - API funcionando correctamente",
+            errors=[],
             data={
                 "version": config.APP_VERSION,
                 "docs_url": "/docs" if config.DEBUG else "Disabled in production",
@@ -153,7 +154,7 @@ def create_app() -> FastAPI:
                     "status": "/status"
                 }
             }
-    )
+        )
     @app.get("/health")
     async def health_check():
         try:
