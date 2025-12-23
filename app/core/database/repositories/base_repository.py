@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 ModelType = TypeVar("ModelType")
 
+class EntityNotFoundError(Exception):
+    pass
+
 class BaseRepository(Generic[ModelType]):
     def __init__(self, model_class: Type[ModelType], session: Session):
         self.model_class = model_class
@@ -22,6 +25,12 @@ class BaseRepository(Generic[ModelType]):
             .filter(self.model_class.id == id)
             .first()
         )
+    
+    def get_by_id_or_fail(self, id: int) -> ModelType:
+        db_obj = self.get_by_id(id)
+        if db_obj is None:
+            raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
+        return db_obj
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
         return (
@@ -75,27 +84,13 @@ class BaseRepository(Generic[ModelType]):
             )
             raise
         
-    def delete_by_id(self, id: int) -> bool:
+    def delete_by_id(self, id: int) -> None:
         db_obj = self.get_by_id(id)
-        if not db_obj:
-            raise ValueError("Objeto no encontrado")
-        self.delete(db_obj)
-        return True
-        
-    def exists(self, **filters) -> bool:
-        try:
-            query = self.session.query(self.model_class)
-            for field, value in filters.items():
-                if hasattr(self.model_class, field):
-                    query = query.filter(getattr(self.model_class, field) == value)
+        if db_obj is None:
+            raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
 
-            return self.session.query(query.exists()).scalar()
-        except SQLAlchemyError as e:
-            logger.exception(
-                "Error al intentar determinar la existencia de %s",
-                self.model_class.__name__,
-            )
-            raise
+        self.session.delete(db_obj)
+        self.session.commit()
         
     def count(self, **filters) -> int:
         try:
