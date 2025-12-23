@@ -43,11 +43,10 @@ class MovieBase(BaseModel):
             raise ValueError("El título no puede estar vacío o solo con espacios.")
         return value.strip()
 
+
+
 class MovieCreate(MovieBase):
     pass
-
-class DeleteMovieResponse(BaseModel):
-    id: int
 
 class MovieUpdate(BaseModel):
     title: str | None = None
@@ -68,3 +67,6 @@ class MovieResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class DeleteMovieResponse(BaseModel):
+    id: int    
