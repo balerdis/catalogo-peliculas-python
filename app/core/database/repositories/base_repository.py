@@ -84,10 +84,13 @@ class BaseRepository(Generic[ModelType]):
             )
             raise
         
-    def delete_by_id(self, id: int) -> None:
+    def delete_by_id(self, id: int, confirm: bool = True) -> None:
         db_obj = self.get_by_id(id)
         if db_obj is None:
             raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
+
+        if not confirm:
+            return
 
         self.session.delete(db_obj)
         self.session.commit()
