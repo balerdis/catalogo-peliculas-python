@@ -41,9 +41,11 @@ def read_hello():
 @router.get("/buscar"
             , response_model=ApiResponse[list[MovieResponse]]
             , status_code=status.HTTP_200_OK
-            , description="Búsqueda por titulo, director o genero total o parcial")
+            , description="Búsqueda por titulo, director o genero total o parcial y por precio")
 def search_movies(
     search: str | None = None,
+    price_min: float = 0.0,
+    price_max: float | None = None,
     offset: int = 0,
     fetch: int = 100,
     db: Session = Depends(db_connection.get_db),
@@ -51,6 +53,8 @@ def search_movies(
     repo = MovieRepository(db)
     movies = repo.search(
         search=search,
+        price_min=price_min,
+        price_max=price_max,
         offset=offset,
         fetch=fetch
         )
@@ -87,10 +91,15 @@ def get_movies(
             )
 def get_reporte_resumen(
     db: Session = Depends(db_connection.get_db),
+    genre: str | None = None,
+    director: str | None = None
 ):
     repo = MovieRepository(db)
 
-    reporte = repo.get_reporte_resumen()
+    reporte = repo.get_reporte_resumen(
+        genre=genre,
+        director=director
+    )
 
     summary = MoviesReportSummary(
         total_movies=reporte.total_movies,
@@ -103,6 +112,26 @@ def get_reporte_resumen(
         message="La consulta fue realizada exitosamente",
         errors=[],
         data=MoviesReportSummary.model_validate(summary)
+    )
+
+
+@router.get("/top_por_precio"
+            , response_model=ApiResponse[list[MovieResponse]]
+            , status_code=status.HTTP_200_OK
+            , description="Devuelve el top de las peliculas por precio")
+def get_top_by_price(
+    db: Session = Depends(db_connection.get_db),
+    n: int = 5
+):
+    repo = MovieRepository(db)
+
+    movies = repo.get_top_by_price(n)
+
+    return ApiResponse(
+        status="success",
+        message="La consulta fue realizada exitosamente",
+        errors=[],
+        data=movies
     )
 
 
