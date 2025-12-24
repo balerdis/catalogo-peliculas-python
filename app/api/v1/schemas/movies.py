@@ -62,7 +62,13 @@ class MovieUpdate(BaseModel):
 class MovieResponse(BaseModel):
     id: int
     title: str
+    director: str
     year: int
+    genre: str
+    price: float
+    duration: int
+    rating: int
+    description: str
 
     model_config = {
         "from_attributes": True
