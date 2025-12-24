@@ -1,4 +1,4 @@
-from app.api.v1.schemas.movies import MovieCreate, MovieResponse, MovieUpdate, DeleteMovieResponse
+from app.api.v1.schemas.movies import MovieCreate, MovieResponse, MovieUpdate, DeleteMovieResponse, MoviesReportSummary
 from app.api.v1.schemas.generic import ApiResponse
 from fastapi import status, APIRouter
 from app.core.database.connection import db_connection
@@ -8,15 +8,6 @@ from fastapi import Depends
 
 
 router = APIRouter()
-
-@router.get("/hello"
-            , status_code=status.HTTP_200_OK
-            , description="Endpoint de prueba"
-            )
-def read_hello():
-    """Endpoint principal de la API."""
-    return {"message": "Bienvenido al Catálogo de Películas 🎬"}
-
 
 @router.post("/"
              , response_model=ApiResponse[MovieResponse]
@@ -38,22 +29,13 @@ def create_movie(
     )
 
 
-@router.get("/"
-            , response_model=ApiResponse[list[MovieResponse]]
+@router.get("/hello"
             , status_code=status.HTTP_200_OK
-            , description="Listado de todas las películas"
+            , description="Endpoint de prueba"
             )
-def get_movies(
-    db: Session = Depends(db_connection.get_db),
-):
-    repo = MovieRepository(db)
-    movies = repo.get_all()
-    return ApiResponse(
-        status="success",
-        message="Listado obtenido correctamente",
-        errors=[],
-        data=[MovieResponse.model_validate(m) for m in movies]
-    )
+def read_hello():
+    """Endpoint principal de la API."""
+    return {"message": "Bienvenido al Catálogo de Películas 🎬"}
 
 
 @router.get("/buscar"
@@ -77,6 +59,50 @@ def search_movies(
         message="Listado obtenido correctamente",
         errors=[],
         data=[MovieResponse.model_validate(m) for m in movies]
+    )
+
+
+@router.get("/"
+            , response_model=ApiResponse[list[MovieResponse]]
+            , status_code=status.HTTP_200_OK
+            , description="Listado de todas las películas"
+            )
+def get_movies(
+    db: Session = Depends(db_connection.get_db),
+):
+    repo = MovieRepository(db)
+    movies = repo.get_all()
+    return ApiResponse(
+        status="success",
+        message="Listado obtenido correctamente",
+        errors=[],
+        data=[MovieResponse.model_validate(m) for m in movies]
+    )
+
+
+@router.get("/reporte_resumen"
+            , response_model=ApiResponse[MoviesReportSummary]
+            , status_code=status.HTTP_200_OK
+            , description="Reporte. Conteos y valor del inventario"
+            )
+def get_reporte_resumen(
+    db: Session = Depends(db_connection.get_db),
+):
+    repo = MovieRepository(db)
+
+    reporte = repo.get_reporte_resumen()
+
+    summary = MoviesReportSummary(
+        total_movies=reporte.total_movies,
+        total_units=reporte.total_units,
+        total_price=float(reporte.total_price or 0),
+    )
+
+    return ApiResponse(
+        status="success",
+        message="La consulta fue realizada exitosamente",
+        errors=[],
+        data=MoviesReportSummary.model_validate(summary)
     )
 
 

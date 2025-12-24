@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from .base_repository import BaseRepository
 from ..models.models import Movie
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 
 
 class MovieRepository(BaseRepository[Movie]):
@@ -35,5 +35,26 @@ class MovieRepository(BaseRepository[Movie]):
             )
             .scalars()
             .all()
+        )
+    
+    def get_reporte_resumen(self):
+        smt = (
+            select(
+                func.count().label("total_units"),
+                func.sum(Movie.price).label("total_price"),
+                func.count(
+                    func.distinct(
+                        func.concat(Movie.title, '|', Movie.director)
+                    )
+                ).label("total_movies")
+            )
+            .select_from(Movie)
+        )
+        return (
+            self.session
+            .execute(
+                smt
+            )
+            .one()
         )
 

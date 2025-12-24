@@ -68,5 +68,16 @@ class MovieResponse(BaseModel):
         "from_attributes": True
     }
 
+class MoviesReportSummary(BaseModel):
+    """
+    Devuelve un dict con:
+      - productos_distintos
+      - unidades_totales
+      - valor_total (float, dos decimales)
+    """
+    total_movies: int
+    total_units: int
+    total_price: float
+
 class DeleteMovieResponse(BaseModel):
     id: int    
