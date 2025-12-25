@@ -1,4 +1,11 @@
-from app.api.v1.schemas.movies import MovieCreate, MovieResponse, MovieUpdate, DeleteMovieResponse, MoviesReportSummary
+from app.api.v1.schemas.movies import (
+    MovieCreate,
+    MovieUpdate,
+    MovieResponse,
+    ReportFilter,
+    MoviesReportSummary,
+    DeleteMovieResponse,
+)
 from app.api.v1.schemas.generic import ApiResponse
 from fastapi import status, APIRouter
 from app.core.database.connection import db_connection
@@ -41,9 +48,11 @@ def read_hello():
 @router.get("/buscar"
             , response_model=ApiResponse[list[MovieResponse]]
             , status_code=status.HTTP_200_OK
-            , description="Búsqueda por titulo, director o genero total o parcial y por precio")
+            , description="Búsqueda por titulo, director o genero total o parcial y por rango de precio, paginado, y orden por año o precio")
 def search_movies(
     search: str | None = None,
+    year_order_asc: bool = False,
+    price_order_asc: bool = False,
     price_min: float = 0.0,
     price_max: float | None = None,
     offset: int = 0,
@@ -53,6 +62,8 @@ def search_movies(
     repo = MovieRepository(db)
     movies = repo.search(
         search=search,
+        year_order_asc=year_order_asc,
+        price_order_asc=price_order_asc,
         price_min=price_min,
         price_max=price_max,
         offset=offset,
@@ -87,18 +98,19 @@ def get_movies(
 @router.get("/reporte_resumen"
             , response_model=ApiResponse[MoviesReportSummary]
             , status_code=status.HTTP_200_OK
-            , description="Reporte. Conteos y valor del inventario"
+            , description="Reporte. Conteos y valor del inventario, filtros parciales por genero, director y año"
             )
 def get_reporte_resumen(
-    db: Session = Depends(db_connection.get_db),
-    genre: str | None = None,
-    director: str | None = None
+    filters: ReportFilter = Depends(),
+    db: Session = Depends(db_connection.get_db)
 ):
     repo = MovieRepository(db)
 
     reporte = repo.get_reporte_resumen(
-        genre=genre,
-        director=director
+        genre=filters.genre,
+        director=filters.director,
+        year_from=filters.year_from,
+        year_to=filters.year_to,
     )
 
     summary = MoviesReportSummary(
