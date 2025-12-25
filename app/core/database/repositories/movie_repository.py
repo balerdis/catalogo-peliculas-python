@@ -1,3 +1,4 @@
+from operator import ge
 from sqlalchemy.orm import Session
 from .base_repository import BaseRepository
 from ..models.models import Movie
@@ -10,6 +11,8 @@ class MovieRepository(BaseRepository[Movie]):
     
     def search(self, 
                search: str | None = None,
+               year_order_asc: bool = True,
+               price_order_asc: bool = True,
                price_min: float = 0.0,
                price_max: float | None = None,
                offset: int = 0,
@@ -27,10 +30,25 @@ class MovieRepository(BaseRepository[Movie]):
                     Movie.genre.ilike(pattern),
                 )
             )
+
+        order_criteria = []
+
+        if year_order_asc:
+            order_criteria.append(Movie.year.asc())
+        else:
+            order_criteria.append(Movie.year.desc())
+
+        if price_order_asc:
+            order_criteria.append(Movie.price.asc())
+        else:
+            order_criteria.append(Movie.price.desc())
+
+        smt = smt.order_by(*order_criteria)
+
         
         smt = smt.where(Movie.price >= price_min)
         
-        if price_max:
+        if price_max is not None:
             smt = smt.where(Movie.price <= price_max)
         
         fetch = min(fetch, 100)
@@ -49,6 +67,8 @@ class MovieRepository(BaseRepository[Movie]):
             self
             , genre: str | None = None
             , director: str | None = None
+            , year_from: int | None = None
+            , year_to: int | None = None
         ):
         smt = (
             select(
@@ -64,10 +84,16 @@ class MovieRepository(BaseRepository[Movie]):
         )
 
         if genre:
-            smt = smt.where(Movie.genre == genre)
+            smt = smt.where(Movie.genre.ilike(f"%{genre}%"))
         
         if director:
-            smt = smt.where(Movie.director == director)
+            smt = smt.where(Movie.director.ilike(f"%{director}%"))
+
+        if year_from is not None:
+            smt = smt.where(Movie.year >= year_from)
+
+        if year_to is not None:
+            smt = smt.where(Movie.year <= year_to)
 
         return (
             self.session
