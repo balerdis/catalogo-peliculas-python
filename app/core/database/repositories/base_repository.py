@@ -32,12 +32,15 @@ class BaseRepository(Generic[ModelType]):
             raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
         return db_obj
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
+    def get_all(self
+                , offset: int = 0
+                , fetch: int = 100
+                ) -> list[ModelType]:
         return (
             self.session
             .query(self.model_class)
-            .offset(skip)
-            .limit(limit)
+            .offset(offset)
+            .limit(fetch)
             .all()
         )
 
