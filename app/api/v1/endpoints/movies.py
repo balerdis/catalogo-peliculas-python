@@ -15,7 +15,7 @@ from fastapi import Depends
 
 
 router = APIRouter()
-
+# ###################CREATE MOVIE###################
 @router.post("/"
              , response_model=ApiResponse[MovieResponse]
              , status_code=status.HTTP_201_CREATED
@@ -35,7 +35,7 @@ def create_movie(
         data=MovieResponse.model_validate(movie)
     )
 
-
+# ###################TEST ENDPOINT###################
 @router.get("/hello"
             , status_code=status.HTTP_200_OK
             , description="Endpoint de prueba"
@@ -44,7 +44,7 @@ def read_hello():
     """Endpoint principal de la API."""
     return {"message": "Bienvenido al Catálogo de Películas 🎬"}
 
-
+# ###################SEARCH MOVIE###################
 @router.get("/buscar"
             , response_model=ApiResponse[list[MovieResponse]]
             , status_code=status.HTTP_200_OK
@@ -76,7 +76,7 @@ def search_movies(
         data=[MovieResponse.model_validate(m) for m in movies]
     )
 
-
+# #####################GET ALL MOVIES################
 @router.get("/"
             , response_model=ApiResponse[list[MovieResponse]]
             , status_code=status.HTTP_200_OK
@@ -84,9 +84,20 @@ def search_movies(
             )
 def get_movies(
     db: Session = Depends(db_connection.get_db),
+    title_order_asc: bool = True,
+    year_order_asc: bool = False,
+    price_order_asc: bool = True,
+    offset: int = 0,
+    fetch: int = 100
 ):
     repo = MovieRepository(db)
-    movies = repo.get_all()
+    movies = repo.get_all(
+        title_order_asc=title_order_asc
+        , year_order_asc=year_order_asc
+        , price_order_asc=price_order_asc
+        , offset=offset
+        , fetch=fetch
+        )
     return ApiResponse(
         status="success",
         message="Listado obtenido correctamente",
@@ -94,7 +105,7 @@ def get_movies(
         data=[MovieResponse.model_validate(m) for m in movies]
     )
 
-
+# #####################GET REPORT RESUMEN################
 @router.get("/reporte_resumen"
             , response_model=ApiResponse[MoviesReportSummary]
             , status_code=status.HTTP_200_OK
@@ -126,7 +137,7 @@ def get_reporte_resumen(
         data=MoviesReportSummary.model_validate(summary)
     )
 
-
+# #####################GET TOP POR PRECIO################
 @router.get("/top_por_precio"
             , response_model=ApiResponse[list[MovieResponse]]
             , status_code=status.HTTP_200_OK
@@ -146,7 +157,7 @@ def get_top_by_price(
         data=movies
     )
 
-
+# #####################GET MOVIE BY ID################
 @router.get("/{movie_id}"
             , response_model=ApiResponse[MovieResponse]
             , status_code=status.HTTP_200_OK
@@ -168,7 +179,7 @@ def get_movie_by_id(
         data=MovieResponse.model_validate(movie)
     )
 
-
+# #####################UPDATE MOVIE BY ID################
 @router.patch("/{movie_id}"
               , response_model=ApiResponse[MovieResponse]
               , status_code=status.HTTP_200_OK
@@ -194,7 +205,7 @@ def update_movie_by_id(
         data=MovieResponse.model_validate(repo.update(movie))
     )
 
-
+# #####################DELETE MOVIE BY ID################
 @router.delete(
         "/{movie_id}"
         , response_model=ApiResponse[DeleteMovieResponse]
