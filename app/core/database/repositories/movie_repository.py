@@ -132,4 +132,45 @@ class MovieRepository(BaseRepository[Movie]):
             .scalars()
             .all()
         )
+    
+    def get_all(self
+                , title_order_asc: bool = True
+                , year_order_asc: bool = False
+                , price_order_asc: bool = True
+                , offset: int = 0
+                , fetch: int = 100
+                ) -> list[Movie]:
+        
+
+        smt = select(Movie)
+
+        order_criteria = []
+
+        if year_order_asc:
+            order_criteria.append(Movie.year.asc())
+        else:
+            order_criteria.append(Movie.year.desc())
+
+        if title_order_asc:
+            order_criteria.append(Movie.title.asc())
+        else:
+            order_criteria.append(Movie.title.desc())
+
+        if price_order_asc:
+            order_criteria.append(Movie.price.asc())
+        else:
+            order_criteria.append(Movie.price.desc())
+
+        smt = smt.order_by(*order_criteria)
+
+        return (
+            self.session
+            .execute(
+                smt
+                .offset(offset)
+                .limit(fetch)
+            )
+            .scalars()
+            .all()
+        )
 
