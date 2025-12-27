@@ -1,8 +1,9 @@
 from operator import ge
-from sqlalchemy.orm import Session
-from .base_repository import BaseRepository
-from ..models.models import Movie
+from sqlalchemy.orm import Session, joinedload
+from app.core.database.repositories.base_repository import BaseRepository
+from app.core.database.models.models import Movie, Genre
 from sqlalchemy import select, or_, func
+
 
 
 class MovieRepository(BaseRepository[Movie]):
@@ -19,7 +20,10 @@ class MovieRepository(BaseRepository[Movie]):
                fetch: int = 100
                ) -> list[Movie]:
         
-        smt = select(Movie)
+        smt = (
+            select(Movie)
+            .options(joinedload(Movie.genre))
+        )
 
         if search:
             pattern = f"%{search}%"
@@ -27,7 +31,7 @@ class MovieRepository(BaseRepository[Movie]):
                 or_(
                     Movie.title.ilike(pattern),
                     Movie.director.ilike(pattern),
-                    Movie.genre.ilike(pattern),
+                    Genre.name.ilike(pattern),
                 )
             )
 
@@ -81,10 +85,11 @@ class MovieRepository(BaseRepository[Movie]):
                 ).label("total_movies")
             )
             .select_from(Movie)
+            .join(Movie.genre)
         )
 
         if genre:
-            smt = smt.where(Movie.genre.ilike(f"%{genre}%"))
+            smt = smt.where(Genre.name.ilike(f"%{genre}%"))
         
         if director:
             smt = smt.where(Movie.director.ilike(f"%{director}%"))
