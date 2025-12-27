@@ -1,11 +1,13 @@
 from pydantic import BaseModel
 
+from app.api.v1.schemas.genre.responses import GenreResponse
+
 class MovieResponse(BaseModel):
     id: int
     title: str
     director: str
     year: int
-    genre: str
+    genre: GenreResponse
     price: float
     duration: int | None
     rating: int | None
