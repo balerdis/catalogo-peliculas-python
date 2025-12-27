@@ -1,7 +1,59 @@
 #/app/core/database/models.py
-from sqlalchemy import CheckConstraint, Column, Integer, String, DateTime, TIMESTAMP, Boolean, Date, BigInteger, Text, ForeignKey, func, Numeric
+from sqlalchemy import (
+    CheckConstraint, 
+    Column, 
+    Integer, 
+    String, 
+    DateTime, 
+    TIMESTAMP, 
+    Boolean, 
+    Date, 
+    BigInteger, 
+    Text, 
+    ForeignKey, 
+    func, 
+    Numeric,
+    Index
+)
+from sqlalchemy.orm import validates, relationship
 from .base import Base
-from sqlalchemy.orm import validates
+
+
+class Genre(Base):
+    __tablename__ = "genres"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False, unique=True, index=True)
+
+    falta = Column(
+        DateTime, 
+        nullable=False, 
+        server_default=func.now()
+    )
+
+    fmodificacion = Column(
+        DateTime, 
+        nullable=False, 
+        server_default=func.now(), 
+        onupdate=func.now()
+    )
+
+    habilitado = Column(
+        Boolean, 
+        nullable=True, 
+        server_default="1"
+    )
+
+    feliminado = Column(
+        DateTime, 
+        nullable=True
+    )
+
+    movies = relationship("Movie", back_populates="genre")
+
+    __table_args__ = (
+        Index("ix_genres_active", "habilitado", "feliminado"),
+        Index("ix_genres_name", "name"),
+    )    
 
 class Movie(Base):
     __tablename__ = "movies"
@@ -21,6 +73,15 @@ class Movie(Base):
     price = Column(Numeric(10, 2), index=True, nullable=False)
 
     is_watched = Column(Boolean, index=True, nullable=False, default=False)
+
+    genre_id = Column(
+        Integer, 
+        ForeignKey("genres.id", ondelete="NO ACTION", onupdate="NO ACTION"), 
+        nullable=False,
+        index=True
+    )
+
+    genre = relationship("Genre", back_populates="movies", lazy="joined")
 
     __table_args__ = (
         CheckConstraint('year >= 1880 and year <= 2030', name='year_constraint'),

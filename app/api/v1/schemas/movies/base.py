@@ -5,7 +5,7 @@ class MovieBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=255)
     director: str = Field(..., min_length=1, max_length=100)
     year: int = Field(..., gt=1880, lt=2030)
-    genre: str = Field(..., min_length=3, max_length=50)
+    genre_id: int = Field(..., gt=0)
     price: float = Field(..., gt=0)
 
     duration: int | None = None
