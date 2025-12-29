@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.api.v1.schemas.genre.responses import GenreResponse
+from app.api.v1.schemas.genres.responses import GenreResponse
 
 class MovieResponse(BaseModel):
     id: int

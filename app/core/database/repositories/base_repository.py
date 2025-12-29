@@ -1,6 +1,6 @@
 import logging
 from typing import Generic, Optional, TypeVar, Type, Mapping, Any
-
+from sqlalchemy import select
 
 
 from sqlalchemy.orm import Session
@@ -32,17 +32,25 @@ class BaseRepository(Generic[ModelType]):
             raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
         return db_obj
 
+    # este metodo lo pase a Alchemy 2.0, faltan los otros en este repositorio
     def get_all(self
                 , offset: int = 0
                 , fetch: int = 100
                 ) -> list[ModelType]:
+        
+
+        smt = select(self.model_class)
+
         return (
             self.session
-            .query(self.model_class)
-            .offset(offset)
-            .limit(fetch)
+            .execute(
+                smt
+                .offset(offset)
+                .limit(fetch)
+            )
+            .scalars()
             .all()
-        )
+        )    
 
         
     def create(self, data: Mapping[str, Any]) -> ModelType:
