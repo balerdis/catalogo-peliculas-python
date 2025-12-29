@@ -7,6 +7,7 @@ from sqlalchemy import text
 from time import time
 
 from app.api.v1.endpoints.movies import router as api_router_movies
+from app.api.v1.endpoints.genres import router as api_router_genres
 from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
@@ -135,6 +136,7 @@ def create_app() -> FastAPI:
 
     v1_router = APIRouter()
     v1_router.include_router(api_router_movies, tags=["MOVIES"], prefix="/movies")
+    v1_router.include_router(api_router_genres, tags=["GENRES"], prefix="/genres")
     app.include_router(v1_router, prefix="/api/v1")
 
     @app.get("/", response_model=ApiResponse)
