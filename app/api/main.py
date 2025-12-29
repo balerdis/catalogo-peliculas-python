@@ -3,11 +3,11 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from sqlalchemy import text
-from time import time
 
 from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.v1.endpoints.genres import router as api_router_genres
+from app.api.system.health import router as health_router
+from app.api.system.status import router as status_router
 from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
@@ -138,6 +138,8 @@ def create_app() -> FastAPI:
     v1_router.include_router(api_router_movies, tags=["MOVIES"], prefix="/movies")
     v1_router.include_router(api_router_genres, tags=["GENRES"], prefix="/genres")
     app.include_router(v1_router, prefix="/api/v1")
+    app.include_router(health_router)
+    app.include_router(status_router)    
 
     @app.get("/", response_model=ApiResponse)
     async def root():
@@ -149,82 +151,13 @@ def create_app() -> FastAPI:
                 "version": config.APP_VERSION,
                 "docs_url": "/docs" if config.DEBUG else "Disabled in production",
                 "endpoints": {
-                    "authentication": "/api/v1/auth/",
-                    "rag_queries": "/api/v1/rag/",
-                    "agent_queries": "/api/v1/agent/",
+                    "movies_queries": "/api/v1/movies/",
+                    "genres_queries": "/api/v1/genres/",
                     "health": "/health",
                     "status": "/status"
                 }
             }
         )
-    @app.get("/health")
-    async def health_check():
-        try:
-            # Verificar conexión a base de datos
-            with db_connection.get_session() as session:
-                # Simple query para verificar conectividad
-                result = session.execute(text("SELECT 1 as health_check")).fetchone()
-                db_status = "healthy" if result and result[0] == 1 else "unhealthy"                
-            
-            health_data = {
-                "status": "healthy",
-                "timestamp": time(),
-                "version": config.APP_VERSION,
-                "database": db_status,
-                "components": {
-                    "api": "healthy",
-                    "database": db_status,
-                    "authentication": "healthy"
-                }
-            }
-            
-            return health_data
-            
-        except Exception as e:
-            logger.error(f"Health check failed: {e}")
-            return JSONResponse(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={
-                    "status": "unhealthy",
-                    "timestamp": time(),
-                    "version": config.APP_VERSION,
-                    "error": str(e),
-                    "components": {
-                        "api": "healthy",
-                        "database": "unhealthy",
-                        "authentication": "unknown"
-                    }
-                }
-            )
-        
-    @app.get("/status")
-    async def api_status():
-        try:
-            total_users = 111
-            active_users = 222
-
-            
-            return {
-                "api_name": config.APP_NAME,
-                "api_version": config.APP_VERSION,
-                "database_status": "connected",
-                "statistics": {
-                    "total_users": total_users,
-                    "active_users": active_users,
-                },
-                "configuration": {
-                    "debug_mode": config.DEBUG,
-                }
-            }
-                
-        except Exception as e:
-            logger.error(f"Error getting API status: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error al obtener estado de la API"
-            )          
-
-          
 
 
     return app
