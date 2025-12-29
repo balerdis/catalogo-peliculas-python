@@ -6,8 +6,7 @@ from contextlib import asynccontextmanager
 
 from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.v1.endpoints.genres import router as api_router_genres
-from app.api.system.health import router as health_router
-from app.api.system.status import router as status_router
+from app.api.system.router import router as system_router
 from app.api.middleware.auth_middleware import AuthMiddleware
 from app.core.database.connection import db_connection
 from app.config.config import config
@@ -137,27 +136,11 @@ def create_app() -> FastAPI:
     v1_router = APIRouter()
     v1_router.include_router(api_router_movies, tags=["MOVIES"], prefix="/movies")
     v1_router.include_router(api_router_genres, tags=["GENRES"], prefix="/genres")
-    app.include_router(v1_router, prefix="/api/v1")
-    app.include_router(health_router)
-    app.include_router(status_router)    
 
-    @app.get("/", response_model=ApiResponse)
-    async def root():
-        return ApiResponse(
-            status="success",
-            message=f"{config.APP_NAME} v{config.APP_VERSION} - API funcionando correctamente",
-            errors=[],
-            data={
-                "version": config.APP_VERSION,
-                "docs_url": "/docs" if config.DEBUG else "Disabled in production",
-                "endpoints": {
-                    "movies_queries": "/api/v1/movies/",
-                    "genres_queries": "/api/v1/genres/",
-                    "health": "/health",
-                    "status": "/status"
-                }
-            }
-        )
+    app.include_router(system_router)
+    app.include_router(v1_router, prefix="/api/v1")
+
+    logger.info("Routers configurated")
 
 
     return app
