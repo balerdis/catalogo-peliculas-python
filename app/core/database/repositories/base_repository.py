@@ -1,6 +1,6 @@
 import logging
 from typing import Generic, Optional, TypeVar, Type, Mapping, Any
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 from sqlalchemy.orm import Session
@@ -19,12 +19,9 @@ class BaseRepository(Generic[ModelType]):
         self.session = session
 
     def get_by_id(self, id: int) -> Optional[ModelType]:
-        return (
-            self.session
-            .query(self.model_class)
-            .filter(self.model_class.id == id)
-            .first()
-        )
+        stmt = select(self.model_class).where(self.model_class.id == id)
+        result = self.session.execute(stmt).scalar_one_or_none()
+        return result
     
     def get_by_id_or_fail(self, id: int) -> ModelType:
         db_obj = self.get_by_id(id)
@@ -60,13 +57,13 @@ class BaseRepository(Generic[ModelType]):
             self.session.commit()
             self.session.refresh(obj)
             return obj
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
+            self.session.rollback()
             logger.exception(
                 "Error creando %s con data=%s",
                 self.model_class.__name__,
                 data,
             )
-            self.session.rollback()
             raise
         
     def update(self, obj: ModelType) -> ModelType:
@@ -75,12 +72,12 @@ class BaseRepository(Generic[ModelType]):
             self.session.commit()
             self.session.refresh(obj)
             return obj
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
+            self.session.rollback()
             logger.exception(
-                "Error al intentar actualizar el %s",
+                "Error actualizando %s",
                 self.model_class.__name__,
             )
-            self.session.rollback()
             raise
         
     def delete(self, db_obj: ModelType) -> None:
@@ -96,27 +93,33 @@ class BaseRepository(Generic[ModelType]):
             raise
         
     def delete_by_id(self, id: int, confirm: bool = True) -> None:
-        db_obj = self.get_by_id(id)
-        if db_obj is None:
-            raise EntityNotFoundError(f"{self.model_class.__name__} con id={id} no encontrado")
-
         if not confirm:
             return
 
-        self.session.delete(db_obj)
+        obj = self.get_by_id(id)
+        if obj is None:
+            raise EntityNotFoundError(
+                f"{self.model_class.__name__} con id={id} no encontrado"
+            )
+
+        self.session.delete(obj)
         self.session.commit()
         
     def count(self, **filters) -> int:
         try:
-            query = self.session.query(self.model_class)
+            stmt = select(func.count()).select_from(self.model_class)
+
             for field, value in filters.items():
                 if hasattr(self.model_class, field):
-                    query = query.filter(getattr(self.model_class, field) == value)
+                    stmt = stmt.where(
+                        getattr(self.model_class, field) == value
+                    )
 
-            return query.count()
-        except SQLAlchemyError as e:
+            return self.session.execute(stmt).scalar_one()
+
+        except SQLAlchemyError:
             logger.exception(
-                "Error al intentar contar %s",
+                "Error contando %s",
                 self.model_class.__name__,
             )
             raise
