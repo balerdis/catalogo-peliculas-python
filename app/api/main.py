@@ -4,15 +4,15 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from app.api.middleware.auth_middleware import AuthMiddleware
+from app.api.system.router import router as system_router
+from app.core.database.connection import db_connection
+from app.core.database.repositories.base_repository import EntityNotFoundError
+from app.api.v1.schemas.generic import ErrorResponse
 from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.v1.endpoints.genres import router as api_router_genres
-from app.api.system.router import router as system_router
-from app.api.middleware.auth_middleware import AuthMiddleware
-from app.core.database.connection import db_connection
-from app.config.config import config
-from app.core.database.repositories.base_repository import EntityNotFoundError
-from app.api.v1.schemas.generic import ErrorResponse, ApiResponse
 
+from app.config.config import config
 
 import logging
 
