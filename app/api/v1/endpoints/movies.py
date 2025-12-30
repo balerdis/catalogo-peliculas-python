@@ -91,7 +91,7 @@ def get_movies(
     fetch: int = 100
 ):
     repo = MovieRepository(db)
-    movies = repo.get_all(
+    movies = repo.get_all_ordered(
         title_order_asc=title_order_asc
         , year_order_asc=year_order_asc
         , price_order_asc=price_order_asc
