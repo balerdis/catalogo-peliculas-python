@@ -1,5 +1,4 @@
-from operator import ge
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, contains_eager
 from app.core.database.repositories.base_repository import BaseRepository
 from app.core.database.models.models import Movie, Genre
 from sqlalchemy import select, or_, func
@@ -22,7 +21,8 @@ class MovieRepository(BaseRepository[Movie]):
         
         smt = (
             select(Movie)
-            .options(joinedload(Movie.genre))
+            .join(Movie.genre)
+            .options(contains_eager(Movie.genre))
         )
 
         if search:
@@ -35,35 +35,27 @@ class MovieRepository(BaseRepository[Movie]):
                 )
             )
 
-        order_criteria = []
-
-        if year_order_asc:
-            order_criteria.append(Movie.year.asc())
-        else:
-            order_criteria.append(Movie.year.desc())
-
-        if price_order_asc:
-            order_criteria.append(Movie.price.asc())
-        else:
-            order_criteria.append(Movie.price.desc())
-
-        smt = smt.order_by(*order_criteria)
-
-        
         smt = smt.where(Movie.price >= price_min)
         
         if price_max is not None:
             smt = smt.where(Movie.price <= price_max)
-        
-        fetch = min(fetch, 100)
+
+        order_criteria = [
+            Movie.year.asc() if year_order_asc else Movie.year.desc(),
+            Movie.price.asc() if price_order_asc else Movie.price.desc(),
+        ]
+
+        smt = smt.order_by(*order_criteria)
+
         return (
             self.session
             .execute(
                 smt
                 .offset(offset)
-                .limit(fetch)
+                .limit(min(fetch, 100))
             )
             .scalars()
+            .unique()
             .all()
         )
     
@@ -102,9 +94,7 @@ class MovieRepository(BaseRepository[Movie]):
 
         return (
             self.session
-            .execute(
-                smt
-            )
+            .execute(smt)
             .one()
         )
     
@@ -116,29 +106,12 @@ class MovieRepository(BaseRepository[Movie]):
         )
         return (
             self.session
-            .execute(
-                smt
-            )
+            .execute(smt)
             .scalars()
             .all()
         )
     
-    def get_top_by_stock(self, n: int = 5):
-        smt = (
-            select(Movie)
-            .order_by(Movie.stock.desc())
-            .limit(n)
-        )
-        return (
-            self.session
-            .execute(
-                smt
-            )
-            .scalars()
-            .all()
-        )
-    
-    def get_all(self
+    def get_all_ordered(self
                 , title_order_asc: bool = True
                 , year_order_asc: bool = False
                 , price_order_asc: bool = True
@@ -149,29 +122,17 @@ class MovieRepository(BaseRepository[Movie]):
 
         smt = select(Movie)
 
-        order_criteria = []
-
-        if year_order_asc:
-            order_criteria.append(Movie.year.asc())
-        else:
-            order_criteria.append(Movie.year.desc())
-
-        if title_order_asc:
-            order_criteria.append(Movie.title.asc())
-        else:
-            order_criteria.append(Movie.title.desc())
-
-        if price_order_asc:
-            order_criteria.append(Movie.price.asc())
-        else:
-            order_criteria.append(Movie.price.desc())
+        order_criteria = [
+            Movie.year.asc() if year_order_asc else Movie.year.desc(),
+            Movie.title.asc() if title_order_asc else Movie.title.desc(),
+            Movie.price.asc() if price_order_asc else Movie.price.desc(),
+        ]
 
         smt = smt.order_by(*order_criteria)
 
         return (
             self.session
-            .execute(
-                smt
+            .execute(smt
                 .offset(offset)
                 .limit(fetch)
             )
