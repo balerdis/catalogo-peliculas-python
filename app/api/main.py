@@ -11,6 +11,7 @@ from app.core.database.repositories.base_repository import EntityNotFoundError
 from app.api.v1.schemas.generic import ErrorResponse
 from app.api.v1.endpoints.movies import router as api_router_movies
 from app.api.v1.endpoints.genres import router as api_router_genres
+from app.api.v1.endpoints.users import router as api_router_users
 
 from app.config.config import config
 
@@ -136,6 +137,7 @@ def create_app() -> FastAPI:
     v1_router = APIRouter()
     v1_router.include_router(api_router_movies, tags=["MOVIES"], prefix="/movies")
     v1_router.include_router(api_router_genres, tags=["GENRES"], prefix="/genres")
+    v1_router.include_router(api_router_users, tags=["USERS"], prefix="/users")
 
     app.include_router(system_router)
     app.include_router(v1_router, prefix="/api/v1")
