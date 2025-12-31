@@ -20,6 +20,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    op.execute("""
+        UPDATE genres
+        SET modificated_at = NOW()
+        WHERE modificated_at IS NULL;
+    """)
+
+    op.execute("""
+        UPDATE genres
+        SET created_at = NOW()
+        WHERE created_at IS NULL;
+    """)
+
     op.alter_column('genres', 'name',
                existing_type=mysql.VARCHAR(length=50),
                nullable=False)
