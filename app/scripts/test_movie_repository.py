@@ -1,7 +1,7 @@
 from sqlalchemy import desc
 from app.core.database.connection import db_connection
 from app.core.database.repositories.movie_repository import MovieRepository
-from app.core.database.models.models import Movie
+from app.core.database.models.movies import Movie
 
 def main():
     with db_connection.get_session() as db:

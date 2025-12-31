@@ -1,5 +1,5 @@
 from fastapi import status, APIRouter, HTTPException, Depends
-from app.api.v1.schemas.status.response import StatusResponse, ApplicationStatus, RuntimeStatus, FeaturesStatus
+from app.api.v1.schemas.status.responses import StatusResponse, ApplicationStatus, RuntimeStatus, FeaturesStatus
 from app.core.database.connection import db_connection
 from sqlalchemy.orm import Session
 from sqlalchemy import text

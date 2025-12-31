@@ -2,7 +2,7 @@ from fastapi import status, APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from time import time
-from app.api.v1.schemas.health.response import HealthResponse
+from app.api.v1.schemas.health.responses import HealthResponse
 from app.core.database.connection import db_connection
 from app.config.config import config
 from fastapi import Response
