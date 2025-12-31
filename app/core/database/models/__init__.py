@@ -1,4 +1,6 @@
-from .models import Movie, Genre
+from .movies import Movie
+from .genres import Genre
+from .users import User
 from .base import Base
 __all__ = [
     "Movie",

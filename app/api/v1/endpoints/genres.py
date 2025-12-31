@@ -2,7 +2,7 @@ from fastapi import status, APIRouter, Depends
 from app.core.database.connection import db_connection
 from sqlalchemy.orm import Session
 from app.core.database.repositories.base_repository import BaseRepository
-from app.core.database.models.models import Genre
+from app.core.database.models.genres import Genre
 from app.api.v1.schemas.generic import ApiResponse
 from app.api.v1.schemas.genres.responses import GenreResponse
 from app.api.v1.schemas.genres.create import GenreCreate

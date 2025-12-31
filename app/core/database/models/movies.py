@@ -4,56 +4,13 @@ from sqlalchemy import (
     Column, 
     Integer, 
     String, 
-    DateTime, 
-    TIMESTAMP, 
     Boolean, 
-    Date, 
-    BigInteger, 
-    Text, 
     ForeignKey, 
-    func, 
     Numeric,
-    Index
 )
 from sqlalchemy.orm import validates, relationship
 from .base import Base
 
-
-class Genre(Base):
-    __tablename__ = "genres"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False, unique=True, index=True)
-
-    falta = Column(
-        DateTime, 
-        nullable=False, 
-        server_default=func.now()
-    )
-
-    fmodificacion = Column(
-        DateTime, 
-        nullable=False, 
-        server_default=func.now(), 
-        onupdate=func.now()
-    )
-
-    habilitado = Column(
-        Boolean, 
-        nullable=True, 
-        server_default="1"
-    )
-
-    feliminado = Column(
-        DateTime, 
-        nullable=True
-    )
-
-    movies = relationship("Movie", back_populates="genre")
-
-    __table_args__ = (
-        Index("ix_genres_active", "habilitado", "feliminado"),
-        Index("ix_genres_name", "name"),
-    )    
 
 class Movie(Base):
     __tablename__ = "movies"
