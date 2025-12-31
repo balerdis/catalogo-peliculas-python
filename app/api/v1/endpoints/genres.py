@@ -1,7 +1,7 @@
 from fastapi import status, APIRouter, Depends
 from app.core.database.connection import db_connection
 from sqlalchemy.orm import Session
-from app.core.database.repositories.base_repository import BaseRepository
+from app.core.database.repositories.genre_repository import GenreRepository
 from app.core.database.models.genres import Genre
 from app.api.v1.schemas.generic import ApiResponse
 from app.api.v1.schemas.genres.responses import GenreResponse
@@ -17,7 +17,7 @@ router = APIRouter()
             status_code=status.HTTP_200_OK
             )
 async def get_genres(db: Session = Depends(db_connection.get_db)):
-    repo = BaseRepository(Genre, db)
+    repo = GenreRepository(db)
     genres = repo.get_all()
         
     return ApiResponse(
@@ -34,7 +34,7 @@ async def get_genres(db: Session = Depends(db_connection.get_db)):
             status_code=status.HTTP_201_CREATED
             )
 async def create_genre(request: GenreCreate, db: Session = Depends(db_connection.get_db)):
-    repo = BaseRepository(Genre, db)
+    repo = GenreRepository(db)
     genre = repo.create(request.model_dump())
 
     return ApiResponse(
