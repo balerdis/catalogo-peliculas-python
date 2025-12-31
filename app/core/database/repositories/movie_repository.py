@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, contains_eager
 from app.core.database.repositories.base_repository import BaseRepository
-from app.core.database.models.models import Movie, Genre
+from app.core.database.models.movies import Movie
+from app.core.database.models.genres import Genre
 from sqlalchemy import select, or_, func
 
 
