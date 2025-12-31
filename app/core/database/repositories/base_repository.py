@@ -1,7 +1,7 @@
 import logging
 from typing import Generic, Optional, TypeVar, Type, Mapping, Any
 from sqlalchemy import select, func
-
+from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -65,6 +65,14 @@ class BaseRepository(Generic[ModelType]):
                 data,
             )
             raise
+        except IntegrityError:
+            self.session.rollback()
+            logger.exception(
+                "Error de integrityError %s con data=%s",
+                self.model_class.__name__,
+                data,
+            )            
+            raise        
         
     def update(self, obj: ModelType) -> ModelType:
         try:
