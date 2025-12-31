@@ -1,13 +1,11 @@
-from venv import create
-from sqlalchemy.orm import validates, relationship
+from sqlalchemy.orm import relationship
 from .base import Base
 from sqlalchemy import (
     Column, 
     Integer, 
     String, 
     DateTime, 
-    Boolean,
-    delete, 
+    Boolean, 
     func, 
     Index
 )
