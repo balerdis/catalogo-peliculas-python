@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
+from typing import Optional
 from datetime import date
 
 class MovieBase(BaseModel):
@@ -8,7 +9,7 @@ class MovieBase(BaseModel):
     genre_id: int = Field(..., gt=0)
     price: float = Field(..., gt=0)
 
-    duration: int | None = None
+    duration: Optional[int] = Field(default=None, ge=1, le=600)
     rating: int | None = None
     description: str | None = None
     is_watched: bool = False
