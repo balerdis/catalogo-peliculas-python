@@ -2,14 +2,18 @@ from app.api.v1.schemas.movies import (
     MovieCreate,
     MovieUpdate,
     MovieResponse,
-    ReportFilter,
     MoviesReportSummary,
     DeleteMovieResponse,
 )
+
 from app.api.v1.schemas.generic import ApiResponse
 from fastapi import status, APIRouter
 from app.core.database.connection import db_connection
 from app.core.database.repositories.movie_repository import MovieRepository
+from app.core.services.movie_service import MovieService
+from app.core.services.dto.movie.search_dto import MovieSearchDTO
+from app.core.services.dto.movie.list_dto import MovieListDTO
+from app.core.services.dto.movie.report_filter_dto import ReportFilterDTO
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
@@ -25,8 +29,8 @@ def create_movie(
     request: MovieCreate,
     db: Session = Depends(db_connection.get_db),
 ):
-    repo = MovieRepository(db)
-    movie = repo.create(request.model_dump())
+    service = MovieService(MovieRepository(db))
+    movie = service.create(request)
 
     return ApiResponse(
         status="success",
@@ -50,25 +54,12 @@ def read_hello():
             , status_code=status.HTTP_200_OK
             , description="Búsqueda por titulo, director o genero total o parcial y por rango de precio, paginado, y orden por año o precio")
 def search_movies(
-    search: str | None = None,
-    year_order_asc: bool = False,
-    price_order_asc: bool = False,
-    price_min: float = 0.0,
-    price_max: float | None = None,
-    offset: int = 0,
-    fetch: int = 100,
+    params: MovieSearchDTO = Depends(),
     db: Session = Depends(db_connection.get_db),
 ):
-    repo = MovieRepository(db)
-    movies = repo.search(
-        search=search,
-        year_order_asc=year_order_asc,
-        price_order_asc=price_order_asc,
-        price_min=price_min,
-        price_max=price_max,
-        offset=offset,
-        fetch=fetch
-        )
+    service = MovieService(MovieRepository(db))
+    movies = service.search(params)
+
     return ApiResponse(
         status="success",
         message="Listado obtenido correctamente",
@@ -83,21 +74,12 @@ def search_movies(
             , description="Listado de todas las películas"
             )
 def get_movies(
+    params: MovieListDTO = Depends(),
     db: Session = Depends(db_connection.get_db),
-    title_order_asc: bool = True,
-    year_order_asc: bool = False,
-    price_order_asc: bool = True,
-    offset: int = 0,
-    fetch: int = 100
 ):
-    repo = MovieRepository(db)
-    movies = repo.get_all_ordered(
-        title_order_asc=title_order_asc
-        , year_order_asc=year_order_asc
-        , price_order_asc=price_order_asc
-        , offset=offset
-        , fetch=fetch
-        )
+    service = MovieService(MovieRepository(db))
+
+    movies = service.get_all(params)
     return ApiResponse(
         status="success",
         message="Listado obtenido correctamente",
@@ -112,17 +94,12 @@ def get_movies(
             , description="Reporte. Conteos y valor del inventario, filtros parciales por genero, director y año"
             )
 def get_reporte_resumen(
-    filters: ReportFilter = Depends(),
+    filters: ReportFilterDTO = Depends(),
     db: Session = Depends(db_connection.get_db)
 ):
-    repo = MovieRepository(db)
+    service = MovieService(MovieRepository(db))
 
-    reporte = repo.get_reporte_resumen(
-        genre=filters.genre,
-        director=filters.director,
-        year_from=filters.year_from,
-        year_to=filters.year_to,
-    )
+    reporte = service.get_reporte_resumen(filters)
 
     summary = MoviesReportSummary(
         total_movies=reporte.total_movies,
@@ -146,15 +123,14 @@ def get_top_by_price(
     db: Session = Depends(db_connection.get_db),
     n: int = 5
 ):
-    repo = MovieRepository(db)
-
-    movies = repo.get_top_by_price(n)
+    service = MovieService(MovieRepository(db))
+    movies = service.get_top_by_price(n)
 
     return ApiResponse(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=movies
+        data=[MovieResponse.model_validate(m) for m in movies]
     )
 
 # #####################GET MOVIE BY ID################
@@ -167,9 +143,8 @@ def get_movie_by_id(
     movie_id: int,
     db: Session = Depends(db_connection.get_db),
 ):
-    repo = MovieRepository(db)
-
-    movie = repo.get_by_id_or_fail(movie_id)
+    service = MovieService(MovieRepository(db))
+    movie = service.get_by_id_or_fail(movie_id)
 
 
     return ApiResponse(
@@ -190,19 +165,14 @@ def update_movie_by_id(
     request: MovieUpdate,
     db: Session = Depends(db_connection.get_db),
 ):
-    repo = MovieRepository(db)
-
-    movie = repo.get_by_id_or_fail(movie_id)
-    update_data = request.model_dump(exclude_unset=True)
-
-    for field, value in update_data.items():
-        setattr(movie, field, value)
+    service = MovieService(MovieRepository(db))
+    movie_updated = service.update(movie_id, request)
 
     return ApiResponse(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=MovieResponse.model_validate(repo.update(movie))
+        data=MovieResponse.model_validate(movie_updated)
     )
 
 # #####################DELETE MOVIE BY ID################
@@ -228,8 +198,9 @@ def delete_movie_by_id(
     Returns:
         _type_: ApiResponse
     """
-    repo = MovieRepository(db)    
-    repo.delete_by_id(movie_id, confirm)
+    service = MovieService(MovieRepository(db))
+    service.get_by_id_or_fail(movie_id)
+    service.delete_by_id(movie_id, confirm)
 
     return ApiResponse(
         status="success",
