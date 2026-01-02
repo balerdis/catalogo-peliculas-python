@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator
 
-class ReportFilter(BaseModel):
+class ReportFilterDTO(BaseModel):
     genre: str | None = None
     director: str | None = None
     year_from: int | None = None
