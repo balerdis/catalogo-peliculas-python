@@ -1,10 +1,8 @@
-from typing import List, Optional, ClassVar
+from typing import Optional
 import os
 from typing import Optional
-from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
 class Config(BaseSettings):
     APP_NAME: str = "Catalogo peliculas API"
@@ -12,6 +10,9 @@ class Config(BaseSettings):
     APP_DESCRIPTION: str = "Api un catalogo de peliculas"
 
     ENVIRONMENT: str = "develop"
+
+    GENRE_NOT_IDENTIFIED_ID : int = 11
+
     DEBUG: bool = False
 
     DB_USER: str = "root"
