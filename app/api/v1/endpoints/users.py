@@ -1,7 +1,6 @@
 from fastapi import status, APIRouter
 from app.core.database.connection import db_connection
-from sqlalchemy.orm import Session
-from app.core.database.repositories.user_repository import UserRepository
+from app.api.dependencies.users.providers import get_user_service
 from app.api.v1.schemas.users import UserCreate, UserResponse
 from app.api.v1.schemas.generic import ApiResponse
 from app.core.services.user_service import UserService
@@ -16,9 +15,8 @@ router = APIRouter()
              )
 def create_movie(
     request: UserCreate,
-    db: Session = Depends(db_connection.get_db),
+    service: UserService = Depends(get_user_service),
 ):
-    service = UserService(UserRepository(db))
     user = service.create_user(request)
 
     return ApiResponse(
