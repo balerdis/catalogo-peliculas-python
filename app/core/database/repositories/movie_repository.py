@@ -140,4 +140,13 @@ class MovieRepository(BaseRepository[Movie]):
             .scalars()
             .all()
         )
+    
+    def get_by_genre_id(self, genre_id: int) -> list[Movie]:
+        smt = select(Movie).where(Movie.genre_id == genre_id)
+        return (
+            self.session
+            .execute(smt)
+            .scalars()
+            .all()
+        )   
 
