@@ -1,14 +1,30 @@
 from fastapi import status, APIRouter, Depends
-from app.core.database.connection import db_connection
-from sqlalchemy.orm import Session
-from app.core.database.repositories.genre_repository import GenreRepository
-from app.core.database.models.genres import Genre
 from app.api.v1.schemas.generic import ApiResponse
-from app.api.v1.schemas.genres.responses import GenreResponse
+from app.api.v1.schemas.genres.responses import GenreResponse, DeleteGenreResponse
 from app.api.v1.schemas.genres.create import GenreCreate
-
+from app.core.services.genre_service import GenreService
+from app.api.dependencies.genres.providers import get_genre_service
 
 router = APIRouter()
+
+# ###################CREATE GENRE###################
+@router.post("/", 
+            response_model=ApiResponse[GenreResponse],
+            description="Crea un nuevo genero",
+            status_code=status.HTTP_201_CREATED
+            )
+def create_genre(
+    request: GenreCreate, 
+    service: GenreService = Depends(get_genre_service),
+):
+    genre = service.create(request)
+
+    return ApiResponse(
+        status="success",
+        message="Genero creado correctamente",
+        errors=[],
+        data=GenreResponse.model_validate(genre)
+    )
 
 # ###################GET ALL GENRES###################
 @router.get("/", 
@@ -16,9 +32,10 @@ router = APIRouter()
             description="Devuelve todos los generos",
             status_code=status.HTTP_200_OK
             )
-async def get_genres(db: Session = Depends(db_connection.get_db)):
-    repo = GenreRepository(db)
-    genres = repo.get_all()
+def get_genres(
+    service: GenreService = Depends(get_genre_service),
+):
+    genres = service.get_all()
         
     return ApiResponse(
         status="success",
@@ -27,19 +44,60 @@ async def get_genres(db: Session = Depends(db_connection.get_db)):
         data=[GenreResponse.model_validate(g) for g in genres]
     )
 
-# ###################CREATE GENRE###################
-@router.post("/", 
+# ###################GET GENRE BY ID###################
+@router.get("/{genre_id}", 
             response_model=ApiResponse[GenreResponse],
-            description="Crea un nuevo genero",
-            status_code=status.HTTP_201_CREATED
+            description="Devuelve un genero por id",
+            status_code=status.HTTP_200_OK
             )
-async def create_genre(request: GenreCreate, db: Session = Depends(db_connection.get_db)):
-    repo = GenreRepository(db)
-    genre = repo.create(request.model_dump())
+def get_by_id(
+    genre_id: int, 
+    service: GenreService = Depends(get_genre_service),
+):
+    genre = service.get_by_id_or_fail(genre_id)
 
     return ApiResponse(
         status="success",
-        message="Genero creado correctamente",
+        message="Genero obtenido correctamente",
         errors=[],
         data=GenreResponse.model_validate(genre)
+    )
+
+# ####################UPDATE GENRE###################
+@router.patch("/{genre_id}", 
+            response_model=ApiResponse[GenreResponse],
+            description="Actualiza un genero",
+            status_code=status.HTTP_200_OK
+            )
+def update_by_id(
+    genre_id: int, 
+    request: GenreCreate, 
+    service: GenreService = Depends(get_genre_service),
+):
+    genre_updated = service.update(genre_id, request)
+
+    return ApiResponse(
+        status="success",
+        message="Genero actualizado correctamente",
+        errors=[],
+        data=GenreResponse.model_validate(genre_updated)
+    )
+
+# ####################DELETE GENRE###################
+@router.delete("/{genre_id}", 
+            response_model=ApiResponse[DeleteGenreResponse],
+            description="Elimina un genero",
+            status_code=status.HTTP_200_OK
+            )
+def delete_by_id(
+    genre_id: int, 
+    service: GenreService = Depends(get_genre_service),
+):
+    service.delete_by_id(genre_id, False)
+
+    return ApiResponse(
+        status="success",
+        message="Genero eliminado correctamente",
+        errors=[],
+        data=DeleteGenreResponse(genre_id=genre_id)
     )
