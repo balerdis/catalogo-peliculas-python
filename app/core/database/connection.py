@@ -48,6 +48,7 @@ class DatabaseConnection:
         return f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4"
 
     def get_db(self) -> Generator[Session, None, None]:
+        """ solo util cuando se quiere utilizar el scope session via Depends de FastAPI"""
         if not self.SessionLocal:
             raise RuntimeError("Base de datos aún no inicializada")
 
