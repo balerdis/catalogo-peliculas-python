@@ -11,11 +11,9 @@ from fastapi import status, APIRouter
 from app.core.database.connection import db_connection
 from app.core.database.repositories.movie_repository import MovieRepository
 from app.core.services.movie_service import MovieService
-from app.api.dependencies.movies.providers import get_movie_service
 from app.core.services.dto.movie.search_dto import MovieSearchDTO
 from app.core.services.dto.movie.list_dto import MovieListDTO
 from app.core.services.dto.movie.report_filter_dto import ReportFilterDTO
-from sqlalchemy.orm import Session
 from fastapi import Depends
 
 
@@ -28,8 +26,8 @@ router = APIRouter()
              )
 def create_movie(
     request: MovieCreate,
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     movie = service.create(request)
 
     return ApiResponse(
@@ -55,8 +53,8 @@ def read_hello():
             , description="Búsqueda por titulo, director o genero total o parcial y por rango de precio, paginado, y orden por año o precio")
 def search_movies(
     params: MovieSearchDTO = Depends(),
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     movies = service.search(params)
 
     return ApiResponse(
@@ -74,8 +72,8 @@ def search_movies(
             )
 def get_movies(
     params: MovieListDTO = Depends(),
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     movies = service.get_all(params)
     return ApiResponse(
         status="success",
@@ -92,8 +90,8 @@ def get_movies(
             )
 def get_reporte_resumen(
     filters: ReportFilterDTO = Depends(),
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     reporte = service.get_reporte_resumen(filters)
 
     summary = MoviesReportSummary(
@@ -115,9 +113,9 @@ def get_reporte_resumen(
             , status_code=status.HTTP_200_OK
             , description="Devuelve el top de las peliculas por precio")
 def get_top_by_price(
-    service: MovieService = Depends(get_movie_service),
     n: int = 5
 ):
+    service = MovieService()
     movies = service.get_top_by_price(n)
 
     return ApiResponse(
@@ -135,8 +133,8 @@ def get_top_by_price(
             )
 def get_by_id(
     movie_id: int,
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     movie = service.get_by_id_or_fail(movie_id)
 
 
@@ -156,8 +154,8 @@ def get_by_id(
 def update_by_id(
     movie_id: int,
     request: MovieUpdate,
-    service: MovieService = Depends(get_movie_service),
 ):
+    service = MovieService()
     movie_updated = service.update(movie_id, request)
 
     return ApiResponse(
@@ -177,7 +175,6 @@ def update_by_id(
 def delete_by_id(
     movie_id: int,
     confirm: bool = True,
-    service: MovieService = Depends(get_movie_service),
 ) -> ApiResponse[DeleteMovieResponse]:
     """
     Elimina una pelicula, permite flag de confirmación util para dry-run
@@ -190,6 +187,7 @@ def delete_by_id(
     Returns:
         _type_: ApiResponse
     """
+    service = MovieService()
     service.get_by_id_or_fail(movie_id)
     service.delete_by_id(movie_id, confirm)
 

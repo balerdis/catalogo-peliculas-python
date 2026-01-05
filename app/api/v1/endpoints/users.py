@@ -1,6 +1,4 @@
 from fastapi import status, APIRouter
-from app.core.database.connection import db_connection
-from app.api.dependencies.users.providers import get_user_service
 from app.api.v1.schemas.users import UserCreate, UserResponse
 from app.api.v1.schemas.generic import ApiResponse
 from app.core.services.user_service import UserService
@@ -15,8 +13,8 @@ router = APIRouter()
              )
 def create_movie(
     request: UserCreate,
-    service: UserService = Depends(get_user_service),
 ):
+    service = UserService()
     user = service.create_user(request)
 
     return ApiResponse(

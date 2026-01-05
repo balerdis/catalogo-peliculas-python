@@ -49,69 +49,24 @@ class BaseRepository(Generic[ModelType]):
             .all()
         )    
 
-        
+
     def create(self, data: Mapping[str, Any]) -> ModelType:
-        try:
-            obj = self.model_class(**data)
-            self.session.add(obj)
-            self.session.commit()
-            self.session.refresh(obj)
-            return obj
-        except SQLAlchemyError:
-            self.session.rollback()
-            logger.exception(
-                "Error creando %s con data=%s",
-                self.model_class.__name__,
-                data,
-            )
-            raise
-        except IntegrityError:
-            self.session.rollback()
-            logger.exception(
-                "Error de integrityError %s con data=%s",
-                self.model_class.__name__,
-                data,
-            )            
-            raise        
-        
+        obj = self.model_class(**data)
+        self.session.add(obj)
+        return obj
+
     def update(self, obj: ModelType) -> ModelType:
-        try:
-            self.session.add(obj)
-            self.session.commit()
-            self.session.refresh(obj)
-            return obj
-        except SQLAlchemyError:
-            self.session.rollback()
-            logger.exception(
-                "Error actualizando %s",
-                self.model_class.__name__,
-            )
-            raise
-        
+        self.session.add(obj)
+        return obj
+
     def delete(self, db_obj: ModelType) -> None:
-        try:
-            self.session.delete(db_obj)
-            self.session.commit()
-        except SQLAlchemyError:
-            self.session.rollback()
-            logger.exception(
-                "Error eliminando %s",
-                self.model_class.__name__,
-            )
-            raise
-        
+        self.session.delete(db_obj)
+
     def delete_by_id(self, id: int, confirm: bool = True) -> None:
         if not confirm:
             return
-
-        obj = self.get_by_id(id)
-        if obj is None:
-            raise EntityNotFoundError(
-                f"{self.model_class.__name__} con id={id} no encontrado"
-            )
-
+        obj = self.get_by_id_or_fail(id)
         self.session.delete(obj)
-        self.session.commit()
         
     def count(self, **filters) -> int:
         try:

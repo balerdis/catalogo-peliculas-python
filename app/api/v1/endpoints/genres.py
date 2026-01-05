@@ -3,7 +3,6 @@ from app.api.v1.schemas.generic import ApiResponse
 from app.api.v1.schemas.genres.responses import GenreResponse, DeleteGenreResponse
 from app.api.v1.schemas.genres.create import GenreCreate
 from app.core.services.genre_service import GenreService
-from app.api.dependencies.genres.providers import get_genre_service
 
 router = APIRouter()
 
@@ -15,8 +14,8 @@ router = APIRouter()
             )
 def create_genre(
     request: GenreCreate, 
-    service: GenreService = Depends(get_genre_service),
 ):
+    service = GenreService()
     genre = service.create(request)
 
     return ApiResponse(
@@ -33,8 +32,9 @@ def create_genre(
             status_code=status.HTTP_200_OK
             )
 def get_genres(
-    service: GenreService = Depends(get_genre_service),
+    service: GenreService,
 ):
+    service = GenreService()
     genres = service.get_all()
         
     return ApiResponse(
@@ -52,8 +52,9 @@ def get_genres(
             )
 def get_by_id(
     genre_id: int, 
-    service: GenreService = Depends(get_genre_service),
+    service: GenreService,
 ):
+    service = GenreService()
     genre = service.get_by_id_or_fail(genre_id)
 
     return ApiResponse(
@@ -72,8 +73,9 @@ def get_by_id(
 def update_by_id(
     genre_id: int, 
     request: GenreCreate, 
-    service: GenreService = Depends(get_genre_service),
+    service: GenreService,
 ):
+    service = GenreService()
     genre_updated = service.update(genre_id, request)
 
     return ApiResponse(
@@ -91,9 +93,10 @@ def update_by_id(
             )
 def delete_by_id(
     genre_id: int, 
-    service: GenreService = Depends(get_genre_service),
+    service: GenreService,
 ):
-    service.delete_by_id(genre_id, False)
+    service = GenreService()
+    service.delete_by_id(genre_id)
 
     return ApiResponse(
         status="success",
