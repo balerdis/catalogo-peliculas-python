@@ -6,3 +6,7 @@ class GenreResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DeleteGenreResponse(BaseModel):
+    genre_id: int
