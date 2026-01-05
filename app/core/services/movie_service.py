@@ -8,7 +8,10 @@ from app.core.database.repositories.movie_repository import MovieRepository
 
 class MovieService(BaseService):
 
-    def __init__(self, repository: MovieRepository):
+    def __init__(
+        self, 
+        repository: MovieRepository
+    ):
         super().__init__(repository)
         self.repository: MovieRepository = repository
 

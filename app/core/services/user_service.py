@@ -4,7 +4,10 @@ from app.core.security import hash_password
 
 class UserService(BaseService):
 
-    def __init__(self, repository: UserRepository):
+    def __init__(
+        self, 
+        repository: UserRepository
+    ):
         super().__init__(repository)
         self.repository: UserRepository = repository
 
