@@ -14,7 +14,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.session: Session | None = None
 
     def __enter__(self):
-        self.session = db_connection.get_db()
+        self.session = db_connection.create_session()
         self.genres = GenreRepository(self.session)
         self.movies = MovieRepository(self.session)
         self.users = UserRepository(self.session)
