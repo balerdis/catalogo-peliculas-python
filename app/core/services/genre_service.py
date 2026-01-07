@@ -1,4 +1,3 @@
-from tkinter import NO
 from app.config.config import config
 from app.core.services.base_service import BaseService
 from app.api.v1.schemas.genres.create import GenreCreate
@@ -12,7 +11,7 @@ class GenreService(BaseService):
     
     def create(self, data: GenreCreate):
         with SqlAlchemyUnitOfWork() as uow:
-            result = uow.genres.create(data.model_dump)        
+            result = uow.genres.create(data.model_dump())        
         return result
     def get_by_id_or_fail(self, id: int):
         with SqlAlchemyUnitOfWork() as uow:
