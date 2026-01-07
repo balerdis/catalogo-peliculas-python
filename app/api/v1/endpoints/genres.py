@@ -31,9 +31,7 @@ def create_genre(
             description="Devuelve todos los generos",
             status_code=status.HTTP_200_OK
             )
-def get_genres(
-    service: GenreService,
-):
+def get_genres():
     service = GenreService()
     genres = service.get_all()
         
@@ -50,10 +48,7 @@ def get_genres(
             description="Devuelve un genero por id",
             status_code=status.HTTP_200_OK
             )
-def get_by_id(
-    genre_id: int, 
-    service: GenreService,
-):
+def get_by_id(genre_id: int):
     service = GenreService()
     genre = service.get_by_id_or_fail(genre_id)
 
@@ -72,8 +67,7 @@ def get_by_id(
             )
 def update_by_id(
     genre_id: int, 
-    request: GenreCreate, 
-    service: GenreService,
+    request: GenreCreate,
 ):
     service = GenreService()
     genre_updated = service.update(genre_id, request)
@@ -93,7 +87,6 @@ def update_by_id(
             )
 def delete_by_id(
     genre_id: int, 
-    service: GenreService,
 ):
     service = GenreService()
     service.delete_by_id(genre_id)
