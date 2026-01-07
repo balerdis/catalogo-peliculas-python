@@ -34,7 +34,7 @@ def create_movie(
         status="success",
         message="Película creada correctamente",
         errors=[],
-        data=MovieResponse.model_validate(movie)
+        data=movie
     )
 
 # ###################TEST ENDPOINT###################
@@ -61,7 +61,7 @@ def search_movies(
         status="success",
         message="Listado obtenido correctamente",
         errors=[],
-        data=[MovieResponse.model_validate(m) for m in movies]
+        data=movies
     )
 
 # #####################GET ALL MOVIES################
@@ -79,7 +79,7 @@ def get_movies(
         status="success",
         message="Listado obtenido correctamente",
         errors=[],
-        data=[MovieResponse.model_validate(m) for m in movies]
+        data=movies
     )
 
 # #####################GET REPORT RESUMEN################
@@ -94,17 +94,11 @@ def get_reporte_resumen(
     service = MovieService()
     reporte = service.get_reporte_resumen(filters)
 
-    summary = MoviesReportSummary(
-        total_movies=reporte.total_movies,
-        total_units=reporte.total_units,
-        total_price=float(reporte.total_price or 0),
-    )
-
     return ApiResponse(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=MoviesReportSummary.model_validate(summary)
+        data=reporte
     )
 
 # #####################GET TOP POR PRECIO################
@@ -122,7 +116,7 @@ def get_top_by_price(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=[MovieResponse.model_validate(m) for m in movies]
+        data=movies
     )
 
 # #####################GET MOVIE BY ID################
@@ -142,7 +136,7 @@ def get_by_id(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=MovieResponse.model_validate(movie)
+        data=movie
     )
 
 # #####################UPDATE MOVIE BY ID################
@@ -162,7 +156,7 @@ def update_by_id(
         status="success",
         message="La consulta fue realizada exitosamente",
         errors=[],
-        data=MovieResponse.model_validate(movie_updated)
+        data=movie_updated
     )
 
 # #####################DELETE MOVIE BY ID################

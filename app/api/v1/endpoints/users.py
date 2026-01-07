@@ -2,14 +2,14 @@ from fastapi import status, APIRouter
 from app.api.v1.schemas.users import UserCreate, UserResponse
 from app.api.v1.schemas.generic import ApiResponse
 from app.core.services.user_service import UserService
-from fastapi import Depends
+
 
 router = APIRouter()
 # ###################CREATE USER###################
 @router.post("/"
              , response_model=ApiResponse[UserResponse]
              , status_code=status.HTTP_201_CREATED
-             , description="Crea una nueva película"
+             , description="Crea un nuevo usuario"
              )
 def create_movie(
     request: UserCreate,
@@ -21,5 +21,5 @@ def create_movie(
         status="success",
         message="El usuario fue creado correctamente",
         errors=[],
-        data=UserResponse.model_validate(user)
+        data=user
     )
