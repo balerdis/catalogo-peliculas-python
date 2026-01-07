@@ -12,7 +12,7 @@ class MovieResponse(BaseModel):
     duration: int | None
     rating: int | None
     description: str | None
-
+    genre: GenreResponse | None
     model_config = {
         "from_attributes": True
     }
