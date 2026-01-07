@@ -53,6 +53,7 @@ class BaseRepository(Generic[ModelType]):
     def create(self, data: Mapping[str, Any]) -> ModelType:
         obj = self.model_class(**data)
         self.session.add(obj)
+        self.session.flush()
         return obj
 
     def update(self, obj: ModelType) -> ModelType:
