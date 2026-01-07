@@ -1,31 +1,33 @@
 from app.config.config import config
 from app.core.services.base_service import BaseService
 from app.api.v1.schemas.genres.create import GenreCreate
+from app.api.v1.schemas.genres.responses import GenreResponse
 from app.core.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
 
 class GenreService(BaseService):
-    def get_all(self):
+    def get_all(self) -> list[GenreResponse]:
         with SqlAlchemyUnitOfWork() as uow:
-            result = uow.genres.get_all()
-        return result
+            genres = uow.genres.get_all()
+            return [self._map_genre_to_response(g) for g in genres]
     
-    def create(self, data: GenreCreate):
+    def create(self, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            result = uow.genres.create(data.model_dump())        
-        return result
-    def get_by_id_or_fail(self, id: int):
+            genre = uow.genres.create(data.model_dump())        
+            return self._map_genre_to_response(genre)
+        
+    def get_by_id_or_fail(self, id: int) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            result = uow.genres.get_by_id_or_fail(id)
-        return result
+            genre = uow.genres.get_by_id_or_fail(id)
+            return self._map_genre_to_response(genre)
     
-    def update(self, id: int, data: GenreCreate):
+    def update(self, id: int, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
             genre = uow.genres.get_by_id_or_fail(id)
             update_data = data.model_dump(exclude_unset=True)
             for field, value in update_data.items():
                 setattr(genre, field, value)
-            result = uow.genres.update(genre)
-        return result
+            genre_updated = uow.genres.update(genre)
+            return self._map_genre_to_response(genre_updated)
     
 
     def delete_by_id(self, id: int, confirm: bool = True) -> None:
@@ -47,10 +49,16 @@ class GenreService(BaseService):
 
         with SqlAlchemyUnitOfWork() as uow:
             genre_no_identified = uow.genres.get_by_id_or_fail(config.GENRE_NOT_IDENTIFIED_ID)
-            uow.genres.get_by_id_or_fail(id)
+            genre = uow.genres.get_by_id_or_fail(id)
             movies = uow.movies.get_by_genre_id(id)
             for movie in movies:
                 movie.genre_id = genre_no_identified.id
                 if confirm: uow.movies.update(movie)
             uow.genres.delete_by_id(id, confirm)
+
+    def _map_genre_to_response(self, g) -> GenreResponse:
+        return GenreResponse(
+            id=g.id,
+            name=g.name
+        )
     
