@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from app.core.exceptions.domain.duplicate_entry import DuplicateEntityError
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +51,25 @@ class BaseRepository(Generic[ModelType]):
         )    
 
 
-    def create(self, data: Mapping[str, Any]) -> ModelType:
-        obj = self.model_class(**data)
-        self.session.add(obj)
-        self.session.flush()
-        return obj
+    def create(self, data: dict) -> ModelType:
+        try:
+            entity = self.model_class(**data)
+            self.session.add(entity)
+            self.session.flush()
+            return entity
+
+        except IntegrityError as e:
+            self.session.rollback()
+
+            # MySQL duplicate key
+            if "Duplicate entry" in str(e.orig):
+                raise DuplicateEntityError(
+                    entity=self.model_class.__name__,
+                    field="name",
+                    value=data.get("name")
+                ) from e
+
+            raise
 
     def update(self, obj: ModelType) -> ModelType:
         self.session.add(obj)
