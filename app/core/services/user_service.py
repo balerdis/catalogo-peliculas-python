@@ -10,5 +10,5 @@ class UserService(BaseService):
         with SqlAlchemyUnitOfWork() as uow:
             data.password = hash_password(data.password)
             user.password = None
-            user = uow.users.create(data.model_dump())
+            user = uow.users.create(data.model_dump(), "email")
             return UserResponse(user.model_dump())

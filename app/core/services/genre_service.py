@@ -12,7 +12,7 @@ class GenreService(BaseService):
     
     def create(self, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            genre = uow.genres.create(data.model_dump())        
+            genre = uow.genres.create(data.model_dump(), "name")        
             return self._map_genre_to_response(genre)
         
     def get_by_id_or_fail(self, id: int) -> GenreResponse:
