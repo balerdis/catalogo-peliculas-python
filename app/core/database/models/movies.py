@@ -12,15 +12,15 @@ from sqlalchemy.orm import validates, relationship
 from .base import Base
 
 
-class Movie(Base):
+from .mixins import AuditMixin
+
+class Movie(AuditMixin, Base):
     __tablename__ = "movies"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), index=True)
+    title = Column(String(255), index=True, nullable=False)
     director = Column(String(100), nullable=False)
 
     year = Column(Integer, index=True, nullable=False)
-
-    genre = Column(String(50), index=True, nullable=False)
 
     duration = Column(Integer, nullable=True)
     rating = Column(Integer, index=True)
