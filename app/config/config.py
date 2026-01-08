@@ -16,7 +16,7 @@ class Config(BaseSettings):
     DEBUG: bool = False
 
     DB_USER: str = "root"
-    DB_PASSWORD: str = ""
+    DB_PASSWORD: str = "1323"
     DB_HOST: str = "localhost"
     DB_PORT: str = "3306"
     DB_NAME: str = "catalogfilms"
