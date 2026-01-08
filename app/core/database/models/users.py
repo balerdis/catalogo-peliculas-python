@@ -1,3 +1,4 @@
+# app/core/database/models/users.py
 import email
 from sqlalchemy import (
     Column, 
@@ -10,7 +11,10 @@ from sqlalchemy import (
 
 from .base import Base
 
-class User(Base):
+from .mixins import AuditMixin
+
+class User(AuditMixin, Base):
+
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     name = Column(String(255), index=False)
@@ -19,26 +23,3 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password = Column(String(255), index=False)
 
-    created_at = Column(
-        DateTime, 
-        nullable=False, 
-        server_default=func.now()
-    )
-
-    modificated_at = Column(
-        DateTime, 
-        nullable=False, 
-        server_default=func.now(), 
-        onupdate=func.now()
-    )
-
-    habilited = Column(
-        Boolean, 
-        nullable=True, 
-        server_default="1"
-    )
-
-    deleted_at = Column(
-        DateTime, 
-        nullable=True
-    )
