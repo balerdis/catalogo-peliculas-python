@@ -54,7 +54,7 @@ class GenreService(BaseService):
             for movie in movies:
                 movie.genre_id = genre_no_identified.id
                 if confirm: uow.movies.update(movie)
-            uow.genres.delete_by_id(id, confirm)
+            if confirm: uow.genres.delete_by_id(id, confirm)
 
     def _map_genre_to_response(self, g) -> GenreResponse:
         return GenreResponse(

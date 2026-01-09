@@ -87,9 +87,10 @@ def update_by_id(
             )
 def delete_by_id(
     genre_id: int, 
+    confirm: bool = True
 ):
     service = GenreService()
-    service.delete_by_id(genre_id)
+    service.delete_by_id(genre_id, confirm)
 
     return ApiResponse(
         status="success",
