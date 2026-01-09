@@ -14,7 +14,5 @@ class UnitOfWork(ABC):
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        if exc:
+        if exc_type:
             self.rollback()
-        else:
-            self.commit()
