@@ -89,15 +89,24 @@ class BaseRepository(Generic[ModelType]):
 
             raise
 
-    def update(self, obj: ModelType) -> ModelType:
-        self.session.add(obj)
-        return obj
+    # Este método update() queda comentado porque no se utiliza un update explícito.
+    # Al trabajar con el patrón Unit of Work (es decir, utilizando una única sesión de base de datos),
+    # las entidades obtenidas mediante SELECT quedan automáticamente attached a la Session de SQLAlchemy
+    # (registradas en el identity map). Cualquier modificación sobre una entidad attached
+    # es trackeada automáticamente por SQLAlchemy.
+    # El flush se ejecuta de forma implícita al realizar el commit de la Unit of Work.
+    #
+    # def update(self, obj: ModelType) -> ModelType:
+    #     self.session.add(obj)
+    #     self.session.flush()
+    #     return obj
 
     # Se hacen soft delete siempre
     def delete(self, db_obj: ModelType) -> None:
         db_obj.habilited = False
         db_obj.deleted_at = datetime.now(tz)
         self.session.add(db_obj)
+        self.session.flush()
 
     def delete_by_id(self, id: int, confirm: bool = True) -> None:
         if not confirm:
