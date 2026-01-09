@@ -12,7 +12,8 @@ class GenreService(BaseService):
     
     def create(self, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            genre = uow.genres.create(data.model_dump(), "name")        
+            genre = uow.genres.create(data.model_dump(), "name")  
+            uow.commit()      
             return self._map_genre_to_response(genre)
         
     def get_by_id_or_fail(self, id: int) -> GenreResponse:
@@ -24,10 +25,16 @@ class GenreService(BaseService):
         with SqlAlchemyUnitOfWork() as uow:
             genre = uow.genres.get_by_id_or_fail(id)
             update_data = data.model_dump(exclude_unset=True)
+
             for field, value in update_data.items():
                 setattr(genre, field, value)
-            genre_updated = uow.genres.update(genre)
-            return self._map_genre_to_response(genre_updated)
+                
+            ## No hacer update, el genre ya esta atachado en la sesion y 
+            ## el SqlAlchemy trackea los cambios en el objeto atachado automaticamente    
+            # genre_updated = uow.genres.update(genre)
+            ## El commit de la uow genera el flush automatico antes del commit
+            uow.commit()
+            return self._map_genre_to_response(genre)
     
 
     def delete_by_id(self, id: int, confirm: bool = True) -> None:
@@ -53,8 +60,11 @@ class GenreService(BaseService):
             movies = uow.movies.get_by_genre_id(id)
             for movie in movies:
                 movie.genre_id = genre_no_identified.id
-                if confirm: uow.movies.update(movie)
-            if confirm: uow.genres.delete_by_id(id, confirm)
+                if confirm: 
+                    uow.movies.update(movie)
+            if confirm: 
+                uow.genres.delete_by_id(id, confirm)
+                uow.commit()
 
     def _map_genre_to_response(self, g) -> GenreResponse:
         return GenreResponse(
