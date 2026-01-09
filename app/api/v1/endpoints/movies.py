@@ -182,7 +182,6 @@ def delete_by_id(
         _type_: ApiResponse
     """
     service = MovieService()
-    service.get_by_id_or_fail(movie_id)
     service.delete_by_id(movie_id, confirm)
 
     return ApiResponse(
