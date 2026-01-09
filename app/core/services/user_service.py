@@ -11,4 +11,5 @@ class UserService(BaseService):
             data.password = hash_password(data.password)
             user.password = None
             user = uow.users.create(data.model_dump(), "email")
+            uow.commit()
             return UserResponse(user.model_dump())

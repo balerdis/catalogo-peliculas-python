@@ -12,6 +12,7 @@ class MovieService(BaseService):
     def create(self, data: MovieCreate) -> MovieResponse:
         with SqlAlchemyUnitOfWork() as uow:
             movie = uow.movies.create(data.model_dump())
+            uow.commit()     
             return self._map_movie_to_response(movie)
             
     
@@ -82,7 +83,11 @@ class MovieService(BaseService):
             for field, value in update_data.items():
                 setattr(movie, field, value)
 
-            movie = uow.movies.update(movie)
+            ## No hacer update, el genre ya esta atachado en la sesion y 
+            ## el SqlAlchemy trackea los cambios en el objeto atachado automaticamente    
+            # genre_updated = uow.genres.update(genre)
+            ## El commit de la uow genera el flush automatico antes del commit
+            uow.commit()
             return self._map_movie_to_response(movie)
                 
             
@@ -94,6 +99,7 @@ class MovieService(BaseService):
         with SqlAlchemyUnitOfWork() as uow:
             movie = uow.movies.get_by_id_or_fail(id)
             uow.movies.delete(movie)
+            uow.commit()
 
 
     def _map_movie_to_response(self, m) -> MovieResponse:
