@@ -15,9 +15,6 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
 
     def __enter__(self):
         self.session = db_connection.create_session()
-        self.genres = GenreRepository(self.session)
-        self.movies = MovieRepository(self.session)
-        self.users = UserRepository(self.session)
         return self
 
     def commit(self) -> None:
@@ -25,6 +22,9 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
 
     def rollback(self) -> None:
         self.session.rollback()
+
+    def repo(self, repo_cls):
+        return repo_cls(self.session)
 
     def __exit__(self, exc_type, exc, tb):
         super().__exit__(exc_type, exc, tb)

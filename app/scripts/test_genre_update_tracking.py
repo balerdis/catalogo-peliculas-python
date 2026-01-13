@@ -1,8 +1,10 @@
 from app.core.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from app.core.database.repositories.genre_repository import GenreRepository
 
 def main():
     with SqlAlchemyUnitOfWork() as uow:
-        genre = uow.genres.get_by_id_or_fail(1)
+        repo = uow.repo(GenreRepository)
+        genre = repo.get_by_id_or_fail(1)
 
         print("ANTES")
         print("name:", genre.name)

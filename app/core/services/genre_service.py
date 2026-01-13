@@ -3,27 +3,33 @@ from app.core.services.base_service import BaseService
 from app.api.v1.schemas.genres.create import GenreCreate
 from app.api.v1.schemas.genres.responses import GenreResponse
 from app.core.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from app.core.database.repositories.genre_repository import GenreRepository
+from app.core.database.repositories.movie_repository import MovieRepository
 
 class GenreService(BaseService):
     def get_all(self) -> list[GenreResponse]:
         with SqlAlchemyUnitOfWork() as uow:
-            genres = uow.genres.get_all()
+            repo = uow.repo(GenreRepository)
+            genres = repo.get_all()
             return [self._map_genre_to_response(g) for g in genres]
     
     def create(self, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            genre = uow.genres.create(data.model_dump(), "name")  
+            repo = uow.repo(GenreRepository)
+            genre = repo.create(data.model_dump(), "name")  
             uow.commit()      
             return self._map_genre_to_response(genre)
         
     def get_by_id_or_fail(self, id: int) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            genre = uow.genres.get_by_id_or_fail(id)
+            repo = uow.repo(GenreRepository)
+            genre = repo.get_by_id_or_fail(id)
             return self._map_genre_to_response(genre)
     
     def update(self, id: int, data: GenreCreate) -> GenreResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            genre = uow.genres.get_by_id_or_fail(id)
+            repo = uow.repo(GenreRepository)
+            genre = repo.get_by_id_or_fail(id)
             update_data = data.model_dump(exclude_unset=True)
 
             for field, value in update_data.items():
@@ -55,15 +61,17 @@ class GenreService(BaseService):
         """
 
         with SqlAlchemyUnitOfWork() as uow:
-            genre_no_identified = uow.genres.get_by_id_or_fail(config.GENRE_NOT_IDENTIFIED_ID)
-            genre = uow.genres.get_by_id_or_fail(id)
-            movies = uow.movies.get_by_genre_id(id)
+            repo_genres = uow.repo(GenreRepository)
+            repo_movies = uow.repo(MovieRepository)
+            genre_no_identified = repo_genres.get_by_id_or_fail(config.GENRE_NOT_IDENTIFIED_ID)
+            genre = repo_genres.get_by_id_or_fail(id)
+            movies = repo_movies.get_by_genre_id(id)
             for movie in movies:
                 movie.genre_id = genre_no_identified.id
                 if confirm: 
-                    uow.movies.update(movie)
+                    repo_movies.update(movie)
             if confirm: 
-                uow.genres.delete_by_id(id, confirm)
+                repo_genres.delete_by_id(id, confirm)
                 uow.commit()
 
     def _map_genre_to_response(self, g) -> GenreResponse:

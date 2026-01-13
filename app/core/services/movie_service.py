@@ -5,13 +5,15 @@ from app.core.services.dto.movie.search_dto import MovieSearchDTO
 from app.core.services.dto.movie.report_filter_dto import ReportFilterDTO
 from app.core.services.dto.movie.list_dto import MovieListDTO
 from app.core.unit_of_work.sqlalchemy_uow import SqlAlchemyUnitOfWork
+from app.core.database.repositories.movie_repository import MovieRepository
 
 
 class MovieService(BaseService):
 
     def create(self, data: MovieCreate) -> MovieResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            movie = uow.movies.create(data.model_dump())
+            repo = uow.repo(MovieRepository)
+            movie = repo.create(data.model_dump())
             uow.commit()     
             return self._map_movie_to_response(movie)
             
@@ -20,7 +22,8 @@ class MovieService(BaseService):
                params: MovieSearchDTO
                ) -> list[MovieResponse]:
         with SqlAlchemyUnitOfWork() as uow:
-            movies = uow.movies.search(
+            repo = uow.repo(MovieRepository)
+            movies = repo.search(
                 search=params.search,
                 year_order_asc=params.year_order_asc,
                 price_order_asc=params.price_order_asc,
@@ -35,7 +38,8 @@ class MovieService(BaseService):
                 params: MovieListDTO
                 ) -> list[MovieResponse]:
         with SqlAlchemyUnitOfWork() as uow:
-            movies = uow.movies.get_all_ordered(
+            repo = uow.repo(MovieRepository)
+            movies = repo.get_all_ordered(
                 title_order_asc=params.title_order_asc,
                 year_order_asc=params.year_order_asc,
                 price_order_asc=params.price_order_asc,
@@ -49,7 +53,8 @@ class MovieService(BaseService):
         , filters: ReportFilterDTO
     ) -> MoviesReportSummary:
         with SqlAlchemyUnitOfWork() as uow:
-            reporte = uow.movies.get_reporte_resumen(
+            repo = uow.repo(MovieRepository)
+            reporte = repo.get_reporte_resumen(
                 filters.genre, 
                 filters.director, 
                 filters.year_from, 
@@ -66,18 +71,21 @@ class MovieService(BaseService):
         , n: int = 5
     ) -> list[MovieResponse]:
         with SqlAlchemyUnitOfWork() as uow:
-            movies = uow.movies.get_top_by_price(n)
+            repo = uow.repo(MovieRepository)
+            movies = repo.get_top_by_price(n)
             return [self._map_movie_to_response(m) for m in movies]
     
     def get_by_id_or_fail(self, id: int) -> MovieResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            m = uow.movies.get_by_id_or_fail(id)
+            repo = uow.repo(MovieRepository)
+            m = repo.get_by_id_or_fail(id)
 
             return self._map_movie_to_response(m)
     
     def update(self, id: int, data: MovieUpdate) -> MovieResponse:
         with SqlAlchemyUnitOfWork() as uow:
-            movie = uow.movies.get_by_id_or_fail(id)
+            repo = uow.repo(MovieRepository)
+            movie = repo.get_by_id_or_fail(id)
 
             update_data = data.model_dump(exclude_unset=True)
             for field, value in update_data.items():
@@ -97,8 +105,9 @@ class MovieService(BaseService):
             return
 
         with SqlAlchemyUnitOfWork() as uow:
-            movie = uow.movies.get_by_id_or_fail(id)
-            uow.movies.delete(movie)
+            repo = uow.repo(MovieRepository)
+            movie = repo.get_by_id_or_fail(id)
+            repo.delete(movie)
             uow.commit()
 
 
